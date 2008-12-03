@@ -15,15 +15,18 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.util.Calendars;
 
-public class iCalConnectorTester {
+public class iCalSSLConnectorTester {
 
 	/** Google Credentials */
-	//private static final String _username = "voipsec.team9@gmail.com";
-	//private static final char[] _password = "voice1234".toCharArray();
+//	private static final String _username = "voipsec.team9@gmail.com";
+//	private static final char[] _password = "voice1234".toCharArray();
 	
 	/** Milind iCalendar server creds */
-	private static final String _username = "admin";
-	private static final char[] _password = "admin".toCharArray();
+	//private static final String _username = "admin";
+	//private static final char[] _password = "admin".toCharArray();
+	
+	private static final String _username = "voipproject1";
+	private static final char[] _password = "funvoip".toCharArray();
 	
 	
 //	public static final String 	PRODID = "-//John Morales//iCal4j Connector 1.0//EN";
@@ -31,22 +34,25 @@ public class iCalConnectorTester {
 //	public static final int 	PORT = 80;
 //	public static final String 	BASE_STORE_PATH = "/~jm2873/calendar/events.ics";
 	
-	//public static final String 	HOST = "calendar.cs.columbia.edu";
-	//public static final String 	BASE_STORE_PATH = "/calendars/groups/voipprojectgroup2/calendar/";
+	public static final String 	HOST = "calendar.cs.columbia.edu";
+	public static final String 	BASE_STORE_PATH = "/calendars/groups/voipprojectgroup2/calendar/";
 	
 	private static CalDavCalendarStore _calendarStore = null;
 	
 	public static final String 	PRODID = "-//John Morales//iCal4j Connector 1.0//EN";
-	public static final String 	HOST = "209.2.226.64";
-	public static final int 	PORT = 8008;
-	public static final String 	BASE_STORE_PATH = "/calendars/groups/group01/calendar/";
+	//public static final String 	HOST = "209.2.226.64";
+	//public static final int 	PORT = 8008;
+	public static final int 	PORT = 8443;
+	//public static final String 	BASE_STORE_PATH = "/calendars/groups/group01/calendar/";
 	public static final String	CALENDAR_ID = "myCalendars";
+	private String uid = "C427BEA5-1301-4A6B-B81E-1A5938771D33";
+	private String collectionId = uid + ".ics";
 	
 	
 	/** From unit test */
-	private String collectionId = "1886E30D-2166-4AA4-9A7C-260C0EA59499.ics";
-	private String uid = "1886E30D-2166-4AA4-9A7C-260C0EA59499";
-    private String description = "My collection of calendars";
+//	private String uid = "1886E30D-2166-4AA4-9A7C-260C0EA59499";
+//	private String collectionId = uid + ".ics";
+	private String description = "My collection of calendars";
     private String displayName = "My Calendars";
     private String[] calendarUids;
 	private String[] supportedComponents = {Component.VEVENT};
@@ -60,13 +66,13 @@ public class iCalConnectorTester {
 	public static void main(String[] args) throws Exception 
 	{
 		System.out.println("Testing...");
-		new iCalConnectorTester();
+		new iCalSSLConnectorTester();
 		System.out.println("Exiting");
 	}
 	
-	public iCalConnectorTester() throws Exception
+	public iCalSSLConnectorTester() throws Exception
 	{
-		_calendarStore = new CalDavCalendarStore(PRODID, HOST, PORT, Protocol.getProtocol("http"), BASE_STORE_PATH);
+		_calendarStore = new CalDavCalendarStore(PRODID, HOST, PORT, Protocol.getProtocol("https"), BASE_STORE_PATH);
 		_calendarStore.connect(_username, _password);
 		System.out.println("Connected.");
 		
