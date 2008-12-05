@@ -2,14 +2,14 @@ package edu.columbia.voip.ical;
 
 public class CalendarAccount {
 
-	private String _username = null;
-	private String _password = null;
-	private String _host = null;
-	private String _uri = null;
-	private int    _port;
+	private String 	_username = null;
+	private char[]	_password = null;
+	private String 	_host = null;
+	private String 	_uri = null;
+	private int    	_port = 0;
 	private boolean _ssl_enabled = false; 
 	
-	public CalendarAccount(String user, String pass, String host, String uri, int port, boolean ssl)
+	public CalendarAccount(String user, char[] pass, String host, String uri, int port, boolean ssl)
 	{
 		setUsername(user);
 		setPassword(pass);
@@ -27,11 +27,11 @@ public class CalendarAccount {
 		return _username;
 	}
 
-	public void setPassword(String _password) {
+	public void setPassword(char[] _password) {
 		this._password = _password;
 	}
 
-	public String getPassword() {
+	public char[] getPassword() {
 		return _password;
 	}
 
