@@ -15,16 +15,9 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Property;
 
-public class iCalConnectorTester extends TestCase {
+public class iCalSSLConnectorTest extends TestCase {
 
 	public static final String 	PRODID = "-//John Morales//iCal4j Connector 1.0//EN";
-	
-	/** Non-SSL */
-	private static final String _username = "admin";
-	private static final char[] _password = "admin".toCharArray();
-	public static final String 	HOST = "128.59.18.182";
-	public static final int 	PORT = 8008;
-	public static final String 	BASE_STORE_PATH = "/calendars/groups/group01/3F8850DB-DDCF-461E-9BED-DCCD45FDE8EF/";
 	
 	/** SSL */
 	private static final String _ssl_username = "voipproject1";
@@ -34,34 +27,6 @@ public class iCalConnectorTester extends TestCase {
 	public static final String 	SSL_BASE_STORE_PATH = "/calendars/groups/voipprojectgroup2/calendar/";
 	
 	//private static Log LOG = LogFactory.getLog(iCalConnectorTester.class);
-	
-	public void testNonSSLTest()
-	{
-		try
-		{
-			CalDavCalendarStore calendarStore = 
-						new CalDavCalendarStore(PRODID, HOST, PORT, Protocol.getProtocol("http"), BASE_STORE_PATH);
-			assertNotNull("Couldn't create CalDavCalendarStore?", calendarStore);
-			
-			calendarStore.connect(_username, _password);
-			System.out.println("Connected.");
-			
-			List<String> uidPaths = calendarStore.getCalendarUidPaths();
-			assertNotNull("No ics files?", uidPaths);
-			
-			for (Iterator<String> iter = uidPaths.iterator(); iter.hasNext(); )
-			{
-				CalDavCalendarCollection cc = (CalDavCalendarCollection)calendarStore.getCollection(iter.next());
-				assertNotNull(cc);
-		        
-				Calendar calendar = cc.getCalendar();
-		        assertNotNull(calendar);
-			}			
-			calendarStore.disconnect();
-		}
-		catch (Exception e) { e.printStackTrace(); }
-		System.out.println("Disconnected");
-	}
 	
 	public void testSSLTest()
 	{
