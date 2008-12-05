@@ -8,12 +8,8 @@ import junit.framework.TestCase;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.logging.*;
 
-import net.fortuna.ical4j.connector.*;
 import net.fortuna.ical4j.connector.dav.*;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.Property;
 
 public class iCalConnectorTest extends TestCase {
 

@@ -12,32 +12,33 @@ import net.fortuna.ical4j.connector.dav.CalDavCalendarCollection;
 import net.fortuna.ical4j.connector.dav.CalDavCalendarStore;
 import net.fortuna.ical4j.model.Calendar;
 
-public class CalDavConnection {
-
-	private static final String PRODID = "-//John Morales//iCal4j Connector 1.0//EN";
+public class CalDavConnection 
+{
+	private static final String PRODID = "-//Columbia Univ//iCal4j Connector 1.1//EN";
 	
 	private CalendarAccount 	_account = null;
 	private CalDavCalendarStore _store = null;
 	private Protocol 			_protocol = null;
 	
-	public CalDavConnection(CalendarAccount account)
+	private CalDavConnection(CalendarAccount account)
 	{
 		_account = account;
-		_protocol = (account.isSSLEnabled()) ? Protocol.getProtocol("https") : Protocol.getProtocol("http"); 
+		_protocol = Protocol.getProtocol(account.isSSLEnabled() ? "https" : "http"); 
 		_store = new CalDavCalendarStore(PRODID, account.getHost(), account.getPort(), _protocol, account.getUri());
 	}
 	
-	public List<Calendar> getCalendars(String user, String pass, String URI) 
+	public List<Calendar> getCalendars() 
 			throws NoCalendarEventsException, ObjectStoreException, ObjectNotFoundException
 	{
 		List<Calendar> calendarList = null;
-		_store.connect(_account.getUsername(), _account.getPassword().toCharArray());
+		_store.connect(_account.getUsername(), _account.getPassword());
 		
 		List<String> icsFiles = _store.getCalendarUidPaths();
 		if (icsFiles == null)
 			throw new NoCalendarEventsException("user " + _account.getUsername() + 
 													" does not have any calendar events");
 		
+		// iterate through each of the .ics files and save their events in the list
 		calendarList = new ArrayList<Calendar>(icsFiles.size());
 		for (Iterator<String> iter = icsFiles.iterator(); iter.hasNext(); )
 		{
@@ -53,5 +54,9 @@ public class CalDavConnection {
 		_store.disconnect();
 		return calendarList;
 	}
-
+	
+	public static CalDavConnection createConnection(CalendarAccount account)
+	{
+		return new CalDavConnection(account);
+	}
 }

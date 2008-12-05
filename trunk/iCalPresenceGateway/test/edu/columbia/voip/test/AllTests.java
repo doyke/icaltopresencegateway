@@ -19,6 +19,7 @@ public class AllTests {
 		/* Basic calendar event fetching */
 		suite.addTestSuite(iCalConnectorTest.class);
 		suite.addTestSuite(iCalSSLConnectorTest.class);
+		suite.addTestSuite(iCalDavConnectionTest.class);
 		
 		//$JUnit-END$
 		
