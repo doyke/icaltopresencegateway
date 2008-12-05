@@ -35,13 +35,14 @@ public class CalDavConnection {
 		
 		List<String> icsFiles = _store.getCalendarUidPaths();
 		if (icsFiles == null)
-			throw new NoCalendarEventsException("user " + _account.getUsername() + " does not have any calendar events");
+			throw new NoCalendarEventsException("user " + _account.getUsername() + 
+													" does not have any calendar events");
 		
 		calendarList = new ArrayList<Calendar>(icsFiles.size());
 		for (Iterator<String> iter = icsFiles.iterator(); iter.hasNext(); )
 		{
 			CalDavCalendarCollection collection = (CalDavCalendarCollection)_store.getCollection(iter.next());
-			if (collection == null) 
+			if (collection == null)
 				throw new ObjectNotFoundException();
 			
 			Calendar calendar = collection.getCalendar();

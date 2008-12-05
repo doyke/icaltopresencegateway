@@ -49,39 +49,11 @@ public class iCalConnectorTest extends TestCase {
 		        
 				Calendar calendar = cc.getCalendar();
 		        assertNotNull(calendar);
+		        AllTests.dumpCalendar(calendar);
 			}			
 			calendarStore.disconnect();
 		}
 		catch (Exception e) { e.printStackTrace(); }
 		System.out.println("Disconnected");
 	}
-
-	private void dumpCalendar(Calendar calendar) 
-	{
-		if (calendar == null)
-		{
-			System.err.println("dumpCalendar: calendar is null. returning.");
-			return;
-		}
-		
-		System.out.println("=-=- DUMPING CALENDAR FIELDS =-=-");
-		for (Iterator i = calendar.getComponents().iterator(); i.hasNext();) {
-            Component component = (Component) i.next();
-            System.out.println("Component [" + component.getName() + "]");
-
-            for (Iterator j = component.getProperties().iterator(); j.hasNext();) {
-                Property property = (Property) j.next();
-                System.out.println("Property [" + property.getName() + ", " + property.getValue() + "]");
-                if (property.getName().equals("DTSTART"))
-                {
-                	try {
-                		Date d = new Date(property.getValue());	
-                		System.err.println("date: " + d.toGMTString());
-                	}
-                	catch (Exception e) { e.printStackTrace(); }
-                }
-            }
-        }
-	}
-	
 }
