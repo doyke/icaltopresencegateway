@@ -6,6 +6,8 @@ package edu.columbia.voip.server;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.columbia.voip.user.CalendarAccount;
 import edu.columbia.voip.user.JabberAccount;
@@ -59,6 +61,7 @@ public class DBEngine {
      */
 	public List<GatewayUser> getAllRegisteredUsers() throws DatabaseException
     {
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "Retreiving registered users from database.");
 		List<GatewayUser> allUsers = new ArrayList<GatewayUser>();
 		ResultSet resultSet = null;
         

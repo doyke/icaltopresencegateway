@@ -52,7 +52,29 @@ public class Main
     private void doCleanup() throws DatabaseException
 	{
 		// TODO: probably need to close other connections here.
-    	_dbConnection.closeConnection();
+    	Logger.getLogger(getClass().getName()).log(Level.INFO, getParametersString());
+    	if (_dbConnection != null)
+    		_dbConnection.closeConnection();
+	}
+
+    private String getParametersString()
+	{
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("Gateway Parameter Summary\n");
+		buffer.append("LOGFILE:               " + ServerParameters.LOGFILE + "\n");
+		buffer.append("REGISTRATION_PORT:     " + ServerParameters.REGISTRATION_PORT + "\n");
+		buffer.append("ICALENDAR_HOSTNAME:    " + ServerParameters.ICALENDAR_HOSTNAME + "\n");
+		buffer.append("ICALENDAR_PORT:        " + ServerParameters.ICALENDAR_PORT + "\n");
+		buffer.append("THREAD_POOL_SIZE:      " + ServerParameters.THREAD_POOL_SIZE + "\n");
+		buffer.append("POLL_INTERVAL:         " + ServerParameters.POLL_INTERVAL + "\n");
+		buffer.append("ICALENDAR_USE_SSL:     " + ServerParameters.ICALENDAR_USE_SSL + "\n");
+		buffer.append("MYSQL_HOSTNAME:        " + ServerParameters.MYSQL_HOSTNAME + "\n");
+		buffer.append("MYSQL_REGISTRATION_DB: " + ServerParameters.MYSQL_REGISTRATION_DB + "\n");
+		buffer.append("MYSQL_PORT:            " + ServerParameters.MYSQL_PORT + "\n");
+		buffer.append("MYSQL_USERNAME:        " + ServerParameters.MYSQL_USERNAME + "\n");
+		buffer.append("MYSQL_PASSWORD:        " + ServerParameters.MYSQL_PASSWORD + "\n");
+		
+		return buffer.toString();
 	}
 
 	public Main()
@@ -76,14 +98,17 @@ public class Main
 	private void doBootstrap() throws ConfParseException, DatabaseException
 	{
 		// parse conf file and load configurations into ServerParameters
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "Loading configurations from gateway.conf...");
 		ConfProcessor.loadConfFile();
 		
 		// connect to DB and get registrations
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "Building MySQL database connection.");
 		_dbConnection = DBEngine.buildConnection();
 		_userList = _dbConnection.getAllRegisteredUsers();
 	}
 
 	/**
+     * And.... they're off!
      * @param args the command line arguments
      */
     public static void main(String[] args)
