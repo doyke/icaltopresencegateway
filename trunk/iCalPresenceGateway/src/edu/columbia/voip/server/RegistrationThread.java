@@ -16,15 +16,15 @@ import java.io.*;
  *
  * @author jmoral
  */
-public class Server implements Runnable {
+public class RegistrationThread implements Runnable {
     
     private ServerSocket _serverSocket = null;
     
     /**
      * Creates a new instance of Server
      */
-    public Server() throws IOException {
-        _serverSocket = new ServerSocket(ServerParameters.SERVER_PORT);
+    public RegistrationThread() throws IOException {
+        _serverSocket = new ServerSocket(ServerParameters.REGISTRATION_PORT);
     }
     
     public void run()

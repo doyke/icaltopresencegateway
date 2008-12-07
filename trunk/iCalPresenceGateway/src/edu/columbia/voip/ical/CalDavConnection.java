@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.apache.commons.httpclient.protocol.Protocol;
 
+import edu.columbia.voip.user.CalendarAccount;
+
 import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.connector.ObjectStoreException;
 import net.fortuna.ical4j.connector.dav.CalDavCalendarCollection;

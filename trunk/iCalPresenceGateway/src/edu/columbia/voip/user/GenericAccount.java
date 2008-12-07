@@ -1,24 +1,17 @@
-package edu.columbia.voip.ical;
+package edu.columbia.voip.user;
 
-public class CalendarAccount {
+import java.io.Serializable;
 
+public abstract class GenericAccount implements Serializable 
+{
+	private static final long serialVersionUID = 6723477597076624555L;
+	
 	private String 	_username = null;
 	private char[]	_password = null;
 	private String 	_host = null;
-	private String 	_uri = null;
 	private int    	_port = 0;
 	private boolean _ssl_enabled = false; 
 	
-	public CalendarAccount(String user, char[] pass, String host, String uri, int port, boolean ssl)
-	{
-		setUsername(user);
-		setPassword(pass);
-		setHost(host);
-		setUri(uri);
-		setPort(port);
-		isSSLEnabled(ssl);
-	}
-
 	public void setUsername(String _username) {
 		this._username = _username;
 	}
@@ -33,14 +26,6 @@ public class CalendarAccount {
 
 	public char[] getPassword() {
 		return _password;
-	}
-
-	public void setUri(String _uri) {
-		this._uri = _uri;
-	}
-
-	public String getUri() {
-		return _uri;
 	}
 
 	public void setPort(int _port) {
@@ -66,4 +51,5 @@ public class CalendarAccount {
 	public String getHost() {
 		return _host;
 	}
+	
 }
