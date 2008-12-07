@@ -10,6 +10,8 @@
 package edu.columbia.voip.server;
 
 import java.net.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.io.*;
 
 /**
@@ -29,15 +31,15 @@ public class RegistrationThread implements Runnable {
     
     public void run()
     {
-        Logger.getInstance().println("In server thread");
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Starting up registration thread");
+        
         while (true)
         {
             try {
                 Socket clientSocket = _serverSocket.accept();
-                (new ServerDispatch(clientSocket)).start();
+                (new RegistrationDispatch(clientSocket)).start();
             } catch (IOException e) {
-                e.printStackTrace();
-                e.printStackTrace(Logger.getInstance());
+            	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "got exception in Registration thread.", e);
             }
         }
     }
