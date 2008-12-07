@@ -11,6 +11,7 @@ package edu.columbia.voip.server;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +29,7 @@ import edu.columbia.voip.user.GatewayUser;
 public class Main 
 {
     private static Thread _registrationThread = null;
-    private static Thread _gatewayThread = null;
+    private static GatewayThread _gatewayThread = null;
     
     private static DBEngine _dbConnection = null;
     private static List<GatewayUser> _userList = null;
@@ -52,46 +53,31 @@ public class Main
     private void doCleanup() throws DatabaseException
 	{
 		// TODO: probably need to close other connections here.
-    	Logger.getLogger(getClass().getName()).log(Level.INFO, getParametersString());
+    	Logger.getLogger(getClass().getName()).log(Level.INFO, ServerParameters.getParametersString());
     	if (_dbConnection != null)
     		_dbConnection.closeConnection();
 	}
 
-    private String getParametersString()
-	{
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("Gateway Parameter Summary\n");
-		buffer.append("LOGFILE:               " + ServerParameters.LOGFILE + "\n");
-		buffer.append("REGISTRATION_PORT:     " + ServerParameters.REGISTRATION_PORT + "\n");
-		buffer.append("ICALENDAR_HOSTNAME:    " + ServerParameters.ICALENDAR_HOSTNAME + "\n");
-		buffer.append("ICALENDAR_PORT:        " + ServerParameters.ICALENDAR_PORT + "\n");
-		buffer.append("THREAD_POOL_SIZE:      " + ServerParameters.THREAD_POOL_SIZE + "\n");
-		buffer.append("POLL_INTERVAL:         " + ServerParameters.POLL_INTERVAL + "\n");
-		buffer.append("ICALENDAR_USE_SSL:     " + ServerParameters.ICALENDAR_USE_SSL + "\n");
-		buffer.append("MYSQL_HOSTNAME:        " + ServerParameters.MYSQL_HOSTNAME + "\n");
-		buffer.append("MYSQL_REGISTRATION_DB: " + ServerParameters.MYSQL_REGISTRATION_DB + "\n");
-		buffer.append("MYSQL_PORT:            " + ServerParameters.MYSQL_PORT + "\n");
-		buffer.append("MYSQL_USERNAME:        " + ServerParameters.MYSQL_USERNAME + "\n");
-		buffer.append("MYSQL_PASSWORD:        " + ServerParameters.MYSQL_PASSWORD + "\n");
-		
-		return buffer.toString();
-	}
-
-	public Main()
+    public Main()
     {
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Starting up Gateway: " + new Date());
 		
     	try {
     		doBootstrap();
         	
-    		_gatewayThread = new Thread(new GatewayThread(_userList));
+    		_gatewayThread = new GatewayThread(_userList);
     		_gatewayThread.start();
+    		
             _registrationThread = new Thread(new RegistrationThread());
             _registrationThread.start();
+            
+            _gatewayThread.join();
+            _registrationThread.join();
         } 
     	catch (ConfParseException e) 	{ die(e); }
         catch (IOException e)			{ die(e); }
         catch (DatabaseException e)		{ die(e); }
+        catch (InterruptedException e)	{ die(e); }
         catch (Exception e)				{ die(e); }
     }
 
