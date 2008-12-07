@@ -70,6 +70,10 @@ public class ConfProcessor
 				ServerParameters.MYSQL_REGISTRATION_DB = value;
 			else if (key.equals("MysqlPort"))
 				ServerParameters.MYSQL_PORT = Integer.parseInt(value);
+			else if (key.equals("MysqlUsername"))
+				ServerParameters.MYSQL_USERNAME = value;
+			else if (key.equals("MysqlPassword"))
+				ServerParameters.MYSQL_PASSWORD = value;
 			else
 				throw new ConfParseException("No such configuration parameter: '" + key + "'");
 		}
