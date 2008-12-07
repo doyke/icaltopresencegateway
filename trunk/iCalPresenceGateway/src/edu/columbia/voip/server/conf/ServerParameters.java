@@ -7,7 +7,7 @@
  * and open the template in the editor.
  */
 
-package edu.columbia.voip.server;
+package edu.columbia.voip.server.conf;
 
 /**
  *
@@ -18,6 +18,9 @@ public class ServerParameters {
     /** Filename of server log that record debug messages/events. */
     public static String 		LOGFILE = "ical_gateway.log";
     
+    /** Thread pool size for polling registered users */
+    public static int 			THREAD_POOL_SIZE = 30;
+    
     /** I guess this will be changed later to the port on which iCal messages are sent? */
     public static int 			REGISTRATION_PORT = 1783;
     
@@ -27,16 +30,25 @@ public class ServerParameters {
     /** iCalendar server destination port */
     public static int 			ICALENDAR_PORT = 8443;
     
-    /** Thread pool size for polling registered users */
-    public static int 			THREAD_POOL_SIZE = 30;
-    
-    /** Interval, measured in milliseconds, between when the calendar server is polled 
-     * for new calendar events. */
-    public static long			POLL_INTERVAL = 30000;
-    
     /** Whether the iCalendar server is expecting SSL. */
     public static boolean 		ICALENDAR_USE_SSL = true;
 
+    /** Hostname where the PRESENCE server resides */
+    public static String 		PRESENCE_HOSTNAME = "128.59.18.182";
+    
+    /** PRESENCE server destination port */
+    public static int 			PRESENCE_PORT = 5060;
+    
+    /** Whether the PRESENCE server is expecting SSL. */
+    public static boolean 		PRESENCE_USE_SSL = false;
+
+    /** Presence username for accessing server */
+	public static String		PRESENCE_USERNAME = "presence";
+	
+	/** Interval, measured in milliseconds, between when the calendar server is polled 
+     * for new calendar events. */
+    public static long			POLL_INTERVAL = 30000;
+    
     /** Hostname where mysql is running */
 	public static String 		MYSQL_HOSTNAME = "localhost";
     

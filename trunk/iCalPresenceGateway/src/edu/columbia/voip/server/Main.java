@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import edu.columbia.voip.server.conf.ConfParseException;
 import edu.columbia.voip.server.conf.ConfProcessor;
+import edu.columbia.voip.server.conf.ServerParameters;
 import edu.columbia.voip.user.GatewayUser;
 
 /**
@@ -68,7 +69,7 @@ public class Main
     		_gatewayThread = new GatewayThread(_userList);
     		_gatewayThread.start();
     		
-            _registrationThread = new Thread(new RegistrationThread());
+            _registrationThread = new Thread(new RegistrationThread(_gatewayThread));
             _registrationThread.start();
             
             _gatewayThread.join();

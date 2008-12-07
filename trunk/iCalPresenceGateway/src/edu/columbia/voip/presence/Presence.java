@@ -9,6 +9,8 @@
 
 package edu.columbia.voip.presence;
 
+import java.util.Date;
+
 import edu.columbia.voip.user.GatewayUser;
 import net.fortuna.ical4j.model.Calendar;
 
@@ -25,7 +27,8 @@ public class Presence {
         // TODO: here we can send messages to presence server
     }
 
-	public static void sendMessage(Calendar event, GatewayUser user)
+	public static void sendMessage(String summary, String description,
+			String location, String category, Date start, Date end)
 	{
 		// TODO @Milind, send this calendar event to the presence server for user <user>
 	}

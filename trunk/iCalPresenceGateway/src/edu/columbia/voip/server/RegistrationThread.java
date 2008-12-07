@@ -14,6 +14,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.*;
 
+import edu.columbia.voip.server.conf.ServerParameters;
+
 /**
  *
  * @author jmoral
@@ -21,11 +23,13 @@ import java.io.*;
 public class RegistrationThread implements Runnable {
     
     private ServerSocket _serverSocket = null;
+    private GatewayThread _gatewayThread = null;
     
     /**
      * Creates a new instance of Server
      */
-    public RegistrationThread() throws IOException {
+    public RegistrationThread(GatewayThread gatewayThread) throws IOException {
+    	_gatewayThread = gatewayThread;
         _serverSocket = new ServerSocket(ServerParameters.REGISTRATION_PORT);
     }
     
@@ -37,7 +41,7 @@ public class RegistrationThread implements Runnable {
         {
             try {
                 Socket clientSocket = _serverSocket.accept();
-                (new RegistrationDispatch(clientSocket)).start();
+                (new RegistrationDispatch(_gatewayThread, clientSocket)).start();
             } catch (IOException e) {
             	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "got exception in Registration thread.", e);
             }

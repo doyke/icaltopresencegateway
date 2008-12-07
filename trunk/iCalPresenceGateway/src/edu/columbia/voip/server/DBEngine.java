@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.columbia.voip.server.conf.ServerParameters;
 import edu.columbia.voip.user.CalendarAccount;
 import edu.columbia.voip.user.JabberAccount;
 import edu.columbia.voip.user.GatewayUser;
