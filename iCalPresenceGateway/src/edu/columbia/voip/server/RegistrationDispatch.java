@@ -10,25 +10,27 @@
 package edu.columbia.voip.server;
 
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author jmoral
  */
-public class ServerDispatch extends Thread {
+public class RegistrationDispatch extends Thread {
     
     private Socket _clientSocket = null;
     
     /** Creates a new instance of ServerDispatch */
-    public ServerDispatch(Socket socket) {
+    public RegistrationDispatch(Socket socket) {
         _clientSocket = socket;
     }
     
     public void run()
     {
         // TODO: handle client connection here
-        Logger.getInstance().println("Got connection from: " + _clientSocket.getInetAddress().getHostAddress());
-        Logger.getInstance().println("Begin reading/processing asynchronous message from iCal calendar server?");
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Got connection from: " + _clientSocket.getInetAddress().getHostAddress());
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Begin reading/processing asynchronous message from iCal calendar server?");
     }
     
 }
