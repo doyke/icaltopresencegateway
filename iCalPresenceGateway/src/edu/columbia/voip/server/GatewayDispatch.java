@@ -4,6 +4,7 @@
 package edu.columbia.voip.server;
 
 import java.text.ParseException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -65,7 +66,7 @@ public class GatewayDispatch implements Runnable
 			Calendar event = iter.next();
 			try {
 				if (_user.sendEventToPresence(event))
-					Presence.sendMessage(event, _user);
+					parseAndSend(event);
 			} catch (ObjectNotFoundException e) { 
 				Logger.getLogger(getClass().getName()).log(Level.SEVERE, 
 								"caught ObjectNotFoundException while checking if presence needs updating", e);
@@ -78,4 +79,16 @@ public class GatewayDispatch implements Runnable
 				"Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
 	}
 
+	private void parseAndSend(Calendar event)
+	{
+		// TODO parse out calendar properties into Strings and Dates, then send to Milind.
+		String summary = null;
+		String description = null;
+		String location = null;
+		String category = null;
+		Date start = null;
+		Date end = null;
+		
+		Presence.sendMessage(summary, description, location, category, start, end);
+	}
 }

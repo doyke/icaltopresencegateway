@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import edu.columbia.voip.server.ServerParameters;
 
 public class ConfProcessor
 {
@@ -64,6 +63,14 @@ public class ConfProcessor
 				ServerParameters.ICALENDAR_PORT = Integer.parseInt(value);
 			else if (key.equals("ICalendarUseSSL"))
 				ServerParameters.ICALENDAR_USE_SSL = Boolean.parseBoolean(value);
+			else if (key.equals("PresenceHost"))
+				ServerParameters.PRESENCE_HOSTNAME = value;
+			else if (key.equals("PresencePort"))
+				ServerParameters.PRESENCE_PORT = Integer.parseInt(value);
+			else if (key.equals("PresenceUseSSL"))
+				ServerParameters.PRESENCE_USE_SSL = Boolean.parseBoolean(value);
+			else if (key.equals("PresenceUsername"))
+				ServerParameters.PRESENCE_USERNAME = value;
 			else if (key.equals("MysqlHost"))
 				ServerParameters.MYSQL_HOSTNAME = value;
 			else if (key.equals("MysqlRegistrationDB"))
