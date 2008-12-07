@@ -12,8 +12,8 @@ import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.connector.ObjectStoreException;
 import net.fortuna.ical4j.model.Calendar;
 import edu.columbia.voip.ical.CalDavConnection;
-import edu.columbia.voip.ical.CalendarAccount;
 import edu.columbia.voip.ical.NoCalendarEventsException;
+import edu.columbia.voip.user.CalendarAccount;
 import junit.framework.TestCase;
 
 /**
@@ -37,7 +37,7 @@ public class iCalDavConnectionTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link edu.columbia.voip.ical.CalDavConnection#createConnection(edu.columbia.voip.ical.CalendarAccount)}.
+	 * Test method for {@link edu.columbia.voip.ical.CalDavConnection#createConnection(edu.columbia.voip.user.CalendarAccount)}.
 	 */
 	public void testCreateConnection() {
 		_conn = CalDavConnection.createConnection(_account);

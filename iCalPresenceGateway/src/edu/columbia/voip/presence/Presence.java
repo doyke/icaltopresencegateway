@@ -7,7 +7,7 @@
  * and open the template in the editor.
  */
 
-package edu.columbia.voip.server;
+package edu.columbia.voip.presence;
 
 /**
  *

@@ -1,6 +1,15 @@
-package edu.columbia.voip.server;
+/**
+ * 
+ */
+package edu.columbia.voip.presence;
 
-public class XMPPMessage extends Message {
+import edu.columbia.voip.server.Message;
+
+/**
+ * @author jmoral
+ *
+ */
+public class PresenceMessage extends Message {
 
 	@Override
 	public boolean isValid() {
