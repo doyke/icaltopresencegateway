@@ -29,8 +29,8 @@ public class RegistrationDispatch extends Thread {
     public void run()
     {
         // TODO: handle client connection here
-        Logger.getLogger(getClass().getName()).log(Level.INFO, "Got connection from: " + _clientSocket.getInetAddress().getHostAddress());
-        Logger.getLogger(getClass().getName()).log(Level.INFO, "Begin reading/processing asynchronous message from iCal calendar server?");
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Got registration connection from: " + _clientSocket.getInetAddress().getHostAddress());
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Begin reading stream for serialized GatewayUser");
     }
     
 }
