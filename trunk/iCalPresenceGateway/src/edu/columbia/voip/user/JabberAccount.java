@@ -17,13 +17,11 @@ public class JabberAccount extends GenericAccount implements Serializable
 	/**
 	 * 
 	 */
-	public JabberAccount(String user, char[] pass, String host, int port, boolean ssl)
+	public JabberAccount(String user, char[] pass, String host)
 	{
 		setUsername(user);
 		setPassword(pass);
 		setHost(host);
-		setPort(port);
-		isSSLEnabled(ssl);
 	}
 
 }
