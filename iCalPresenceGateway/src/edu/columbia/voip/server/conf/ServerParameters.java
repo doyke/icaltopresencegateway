@@ -9,6 +9,8 @@
 
 package edu.columbia.voip.server.conf;
 
+import com.sun.corba.se.spi.activation.Server;
+
 /**
  *
  * @author jmoral
@@ -73,9 +75,13 @@ public class ServerParameters {
 		buffer.append("REGISTRATION_PORT:     " + ServerParameters.REGISTRATION_PORT + "\n");
 		buffer.append("ICALENDAR_HOSTNAME:    " + ServerParameters.ICALENDAR_HOSTNAME + "\n");
 		buffer.append("ICALENDAR_PORT:        " + ServerParameters.ICALENDAR_PORT + "\n");
+		buffer.append("ICALENDAR_USE_SSL:     " + ServerParameters.ICALENDAR_USE_SSL + "\n");
 		buffer.append("THREAD_POOL_SIZE:      " + ServerParameters.THREAD_POOL_SIZE + "\n");
 		buffer.append("POLL_INTERVAL:         " + ServerParameters.POLL_INTERVAL + "\n");
-		buffer.append("ICALENDAR_USE_SSL:     " + ServerParameters.ICALENDAR_USE_SSL + "\n");
+		buffer.append("PRESENCE_HOSTNAME:     " + ServerParameters.PRESENCE_HOSTNAME + "\n");
+		buffer.append("PRESENCE_PORT:         " + ServerParameters.PRESENCE_PORT + "\n");
+		buffer.append("PRESENCE_USE_SSL:      " + ServerParameters.PRESENCE_USE_SSL + "\n");
+	    buffer.append("PRESENCE_USERNAME:     " + ServerParameters.PRESENCE_USERNAME + "\n");
 		buffer.append("MYSQL_HOSTNAME:        " + ServerParameters.MYSQL_HOSTNAME + "\n");
 		buffer.append("MYSQL_REGISTRATION_DB: " + ServerParameters.MYSQL_REGISTRATION_DB + "\n");
 		buffer.append("MYSQL_PORT:            " + ServerParameters.MYSQL_PORT + "\n");

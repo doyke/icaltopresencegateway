@@ -95,9 +95,7 @@ public class DBEngine {
 		JabberAccount j = new JabberAccount(
 				resultSet.getString("username"),
 				resultSet.getString("password").toCharArray(),
-				resultSet.getString("host"),
-				resultSet.getInt("port"),
-				resultSet.getBoolean("ssl")
+				resultSet.getString("host")
 				);
 		return j;
 	}

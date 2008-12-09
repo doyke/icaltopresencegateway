@@ -53,7 +53,7 @@ public class GatewayUser implements Serializable
 		this._calendarAccount = new CalendarAccount(user, pass, host, uri, port, ssl);
 		
 		// FIXME: need to be getting actual jabber credentials here.
-		this._jabberAccount = new JabberAccount(user, pass, host, port, ssl);
+		this._jabberAccount = new JabberAccount(user, pass, host);
 		this._caldavConn = CalDavConnection.createConnection(_calendarAccount);
 	}
 	
