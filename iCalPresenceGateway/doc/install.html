@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>iCal-to-Presence Gateway</title>
+<meta name="author" content="Milind,John,Suhas">
+<meta name="keywords" content="ical,presence">
+<meta name="description" content="Brief description of project.">
+
+<style type="text/css">
+.cmd {
+	font-family: courier new;
+	font-size: 12px;
+}
+
+.default {
+	font-weight:bold;
+}
+</style>
+</head>
+<body bgcolor=white>
+
+<h1>iCal-to-Presence Gateway</h1>
+<address>
+John Morales<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="#">jm2873 {at sign} columbia {period or dot} edu</a>
+</address><br>
+<address>
+Milind Nimesh<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="#">mn2353 {at sign} columbia {period or dot} edu</a>
+</address><br>
+<address>
+Suhas Suhas<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="#">ss3474 {at sign} columbia {period or dot} edu</a>
+</address><br>
+<address>
+Henning Schulzrinne<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="#">hgs {at sign} cs {period or dot} columbia {period or dot} edu</a>
+</address>
+
+<h2>Abstract</h2>
+
+<p>Server acts as gateway between iCalendar calendar server (such as Apple's calendar
+server implementation) and SIP Presence server. Users register their calendar account
+with the gateway (via Servlet) and the gateway syncs their calendar events with the
+Presence server. Periodic polling of the calendar server provides automated busy tracking
+for those subscribing to that Presence user.</p>
+
+<p>The gateway is being implemented in Java leveraging the ical4j, ical4j-connector,
+jain-sip, and various Apache libraries for making HTTP-like requests and logging.</p>
+
+<h2>System Requirements</h2>
+
+<ul>
+  <li>Platform Independent (JVM)</li>
+  <li>Network connection</li>
+  <li>Database (Currently using MySQL)</li>
+</ul>
+
+<h2>Quick-Start Installation and Running</h2>
+<ul>
+   <li>Extract compressed archive ical-to-presence-gateway_0.0.1.tar.bz2 to directory DIR and move to that directory.</li>
+
+		<br><span class="cmd">$> tar -C DIR/ -jxf ical-to-presence-gateway_0.0.1.tar.bz2</span><br>
+		<span class="cmd">$> cd DIR/ical-gateway/</span><br><br>
+
+   <li>Rename the sample configuration file to the correct name</li>
+
+		<br><span class="cmd">$> cp conf/gateway.conf-sample conf/gateway.conf</span><br><br>
+
+   <li>Start the server using the run.sh script</li>
+
+	<br><span class="cmd">$> ./run.sh -q</span><br>
+
+</ul>
+
+<p>The server will fire up in quiet mode, displaying something similar to the following:</p>
+
+<span class="cmd">
+$> ./run.sh -q<br/>
+Dec 10, 2008 12:07:04 PM edu.columbia.voip.server.Main <init><br>
+INFO: Starting up Gateway: Wed Dec 10 12:07:04 EST 2008<br>
+Dec 10, 2008 12:07:04 PM edu.columbia.voip.server.Main doBootstrap<br>
+INFO: Loading configurations from gateway.conf...<br>
+Dec 10, 2008 12:07:04 PM edu.columbia.voip.server.Main doBootstrap<br>
+INFO: Building MySQL database connection.<br>
+Dec 10, 2008 12:07:14 PM edu.columbia.voip.server.GatewayThread run<br>
+INFO: Gateway Started.<br></span>
+
+<h2>Advanced Configuration</h2>
+
+The iCal gateway includes a <span class="cmd">gateway.conf-sample</span> that uses all the simplest and
+most common configurations settings. It is likely (especially for a production
+system) that these configuration parameters should be tweaked. The file itself
+briefly describes each of the parameters; this section will describe each of
+these configuration parameters in more detail:
+
+<ul>
+<li>RegistrationListenPort</li>
+
+<p><span class="cmd">
+# Listening TCP port for registrations. Registration servlet will make TCP<br>
+# connection to this port to pass server new registration account.<br>
+# <span class="default">(default: 1783)</span><br>
+RegistrationListenPort 1783<br>
+</span></p>
+
+<li>ThreadPoolSize</li>
+<p><span class="cmd">
+# Size of the thread pool for polling registered user's calendar accounts<br>
+# <span class="default">(default: 30)</span><br>
+ThreadPoolSize 30<br>
+</span></p>
+
+<li>PollInterval</li>
+<p><span class="cmd">
+# Interval between pollings of the iCalendar server. Time measured in<br>
+# milliseconds<br>
+# <span class="default">(default: 30000, e.g., 30 secs)</span><br>
+PollInterval 30000<br>
+</span></p>
+
+<li>LogfileName</li>
+<p><span class="cmd">
+# Name of server log4j logfile<br>
+# <span class="default">(default: ical_gateway.log)</span><br>
+LogfileName ical_gateway.log<br>
+</span></p>
+
+<li>ICalendarHost</li>
+<p><span class="cmd">
+# Hostname of the Apple iCalendar server<br>
+# <span class="default">(default: calendar.cs.columbia.edu)</span><br>
+ICalendarHost calendar.cs.columbia.edu<br>
+</span></p>
+
+<li>ICalendarPort</li>
+<p><span class="cmd">
+# Destination port of the calendar server<br>
+# <span class="default">(default: 8443)</span><br>
+ICalendarPort 8443<br>
+</span></p>
+
+<li>ICalendarUseSSL</li>
+<p><span class="cmd">
+# Is the calendar server expecting SSL connections<br>
+# <span class="default">(default: true)</span><br>
+ICalendarUseSSL true<br>
+</span></p>
+
+<li>PresenceHost</li>
+<p><span class="cmd">
+# Hostname of the Presence server where notifications based upon user's<br>
+# calendars should be sent.<br>
+# <span class="default">(default: presence.cs.columbia.edu)</span><br>
+PresenceHost presence.cs.columbia.edu<br>
+</span></p>
+
+<li>PresencePort</li>
+<p><span class="cmd">
+# Destination port of the presence server<br>
+# <span class="default">(default: 5060)</span><br>
+PresencePort 5060<br>
+</span></p>
+
+<li>PresenceUseSSL</li>
+<p><span class="cmd">
+# Is the presence server expecting SSL connections<br>
+# <span class="default">(default: false)</span><br>
+PresenceUseSSL false<br>
+</span></p>
+
+<li>PresenceUsername</li>
+<p><span class="cmd">
+# Username for accessing presence server<br>
+# <span class="default">(default: presence)</span><br>
+PresenceUsername presence<br>
+</span></p>
+
+<li>MysqlHost</li>
+<p><span class="cmd">
+# Hostname where the mysql server is running<br>
+# <span class="default">(default: localhost)</span><br>
+MysqlHost localhost<br>
+</span></p>
+
+<li>MysqlRegistrationDB</li>
+<p><span class="cmd">
+# Name of mysql database for storing the gateway registrations.<br>
+# <span class="default">(default: icalgateway)</span><br>
+MysqlRegistrationDB icalgateway<br>
+</span></p>
+
+<li>MysqlPort</li>
+<p><span class="cmd">
+# Mysql server's listening port. (most likely won't need to change this)<br>
+# <span class="default">(default: 3306)</span><br>
+MysqlPort 3306<br>
+</span></p>
+
+<li>MysqlUsername</li>
+<p><span class="cmd">
+# Mysql username for database MysqlRegistrationDB<br>
+# <span class="default">(default: root)</span><br>
+MysqlUsername root<br>
+</span></p>
+
+<li>MysqlPassword</li>
+<p><span class="cmd">
+# Password for MysqlUsername<br>
+# <span class="default">(default: &lt;none&gt;, i.e., commented out)</span><br>
+# MysqlPassword mypassword<br>
+</span></p>
+
+</ul>
+
+<h2>Running</h2>
+
+<span class="cmd">
+$> ./run.sh<br/>
+</span>
+
+<p>The server will fire up with regular amount of verbose output. For a list of command line parameters, type:</p>
+
+<span class="cmd">
+$> ./run.sh --help<br/></span>
+
+<h2>Possible Enhancements</h2>
+ <ol>
+   <li>Implementation
+of parts of secure and reliable multicast (SRM) in oRTP. This includes
+implementation of Negative Acknowledgements (NACKs) in oRTP's UDP
+implementation. After this implementation communication protocol based
+on multicast connections can be implemented. </li>
+   <li>Implement open spline and closed spline. </li>
+   <li>When an embedded image is enlarged it does not render upon refresh. This
+   is critical usability bug.</li>
+   <li>Merge the shared white board with latest Amaya release which is 9.55
+   (July 2007).</li>
+ </ol>
+ <h2>How to build white board ?</h2>
+ <p>Follow steps given below in order to build shared white board using Microsoft
+ Visual Studio 6.0.</p>
+ <ol>
+   <li>Download Amaya source code for version 8.5 from http://www.w3.org/Amaya/Distribution/</li>
+   <li>Apply patch file WhiteBrdPatch.patch using following command : <br>&nbsp;&nbsp;&nbsp; patch.exe -p0 &lt; WhiteBrdPatch.patch <br>Note: <br>&nbsp;&nbsp;&nbsp;
+   Use Windows' version 'patch.exe' and NOT Cygwin/Unix
+   version of patch.exe. <br>&nbsp;&nbsp;&nbsp; Current working directory should contain amaya-src-8.5/ &nbsp;&nbsp;&nbsp;
+   </li>
+   <li>Copy 'lib' folder (along with its contents) to amaya-src-8.5/amaya/windows/whiteboard/ </li>
+   <li>Open
+amaya-src-8.5/amaya/windows/whiteboard/amaya.dsw in Microsoft Visual
+Studio 6. (I do not guarantee it will compile with later versions of
+Visual Studio but it will definitely compile with MVS 6)</li>
+   </ol>
+ <h2>Acknowledgements</h2>
+ <p>I
+would like to thank Amaya team for a great tool with well organised
+open source code. I would like to thank Omer Boyaci for providing TCP
+framing implementation for oRTP. Also I would like to thank Professor
+Henning Schulzrinne and Omer Boyaci for their guidance without which
+project would not have been possible. </p>
+<hr>
+Last updated:  2007-06-03 by Gaurav Gupta
+
+
+</body></html>
