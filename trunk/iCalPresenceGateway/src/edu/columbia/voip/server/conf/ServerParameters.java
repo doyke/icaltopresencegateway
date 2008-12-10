@@ -9,8 +9,6 @@
 
 package edu.columbia.voip.server.conf;
 
-import com.sun.corba.se.spi.activation.Server;
-
 /**
  *
  * @author jmoral
