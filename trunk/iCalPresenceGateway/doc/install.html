@@ -13,6 +13,8 @@
 }
 
 .default {
+	font-family: courier new;
+	font-size: 12px;
 	font-weight:bold;
 }
 </style>
@@ -66,6 +68,7 @@ jain-sip, and various Apache libraries for making HTTP-like requests and logging
   <li>Platform Independent (JVM)</li>
   <li>Network connection</li>
   <li>Database (Currently using MySQL)</li>
+  <li>Java Servlet Container (e.g., tomcat)</li>
 </ul>
 
 <h2>Quick-Start Installation and Running</h2>
@@ -236,43 +239,54 @@ $> ./run.sh<br/>
 <span class="cmd">
 $> ./run.sh --help<br/></span>
 
+<h2>High-level Usage</h2>
+
+<p>Users may interact and register to use the gateway by browsing to a URL
+containing a registration servlet. This front-end UI is a to-do, however
+the concept is to have users register their iCalendar
+server information (host, port, URI) and credentials (username, password)
+with our MySQL database. There will also be an option to select the pre-defined
+Columbia iCalendar server from a dropdown.</p>
+
+<p>Once registered, the user's record is permanently stored in the database and
+is read by the server's bootstrap routine during server startup. The bootstrap
+process accesses the database to obtain all the relevant info for registered
+users, saving a data structure in memory for each such "account".</p>
+
 <h2>Possible Enhancements</h2>
  <ol>
-   <li>Implementation
-of parts of secure and reliable multicast (SRM) in oRTP. This includes
-implementation of Negative Acknowledgements (NACKs) in oRTP's UDP
-implementation. After this implementation communication protocol based
-on multicast connections can be implemented. </li>
-   <li>Implement open spline and closed spline. </li>
-   <li>When an embedded image is enlarged it does not render upon refresh. This
-   is critical usability bug.</li>
-   <li>Merge the shared white board with latest Amaya release which is 9.55
-   (July 2007).</li>
+   <li>Due to the limitations of the Apple iCalendar server (and the iCalendar
+   model in general), there is no way to escape polling as the primary means
+   for obtaining calendar information. It would be fantastic for future
+   implementations of calendar servers to support a push method rather than
+   a pull.</li>
+   <li>We suspect there are performance optimizations possible with regard to
+   the number of threads created and destroyed. This seems like it could become
+   a definitely scalability bottleneck as registered gateway users approach
+   100s or 1000s.
  </ol>
- <h2>How to build white board ?</h2>
- <p>Follow steps given below in order to build shared white board using Microsoft
- Visual Studio 6.0.</p>
- <ol>
-   <li>Download Amaya source code for version 8.5 from http://www.w3.org/Amaya/Distribution/</li>
-   <li>Apply patch file WhiteBrdPatch.patch using following command : <br>&nbsp;&nbsp;&nbsp; patch.exe -p0 &lt; WhiteBrdPatch.patch <br>Note: <br>&nbsp;&nbsp;&nbsp;
-   Use Windows' version 'patch.exe' and NOT Cygwin/Unix
-   version of patch.exe. <br>&nbsp;&nbsp;&nbsp; Current working directory should contain amaya-src-8.5/ &nbsp;&nbsp;&nbsp;
-   </li>
-   <li>Copy 'lib' folder (along with its contents) to amaya-src-8.5/amaya/windows/whiteboard/ </li>
-   <li>Open
-amaya-src-8.5/amaya/windows/whiteboard/amaya.dsw in Microsoft Visual
-Studio 6. (I do not guarantee it will compile with later versions of
-Visual Studio but it will definitely compile with MVS 6)</li>
-   </ol>
- <h2>Acknowledgements</h2>
- <p>I
-would like to thank Amaya team for a great tool with well organised
-open source code. I would like to thank Omer Boyaci for providing TCP
-framing implementation for oRTP. Also I would like to thank Professor
-Henning Schulzrinne and Omer Boyaci for their guidance without which
-project would not have been possible. </p>
+
+
+<h2>How to build Gateway</h2>
+ <p>For *NIX platforms, please use the standard autotools method:</p>
+ <span class="cmd">
+ $> cd ical-gateway/<br>
+ $> ./configure --prefix=PREFIX<br>
+ $> make<br>
+</span>
+
+<p>For win32 platforms, please use the build.bat file, which essentially
+performs an ANT build:</p>
+ <span class="cmd">
+ $> cd ical-gateway/<br>
+ $> ant build<br>
+</span>
+
+<h2>Acknowledgements</h2>
+ <p>We would like to thank Professor Henning Schulzrinne and our fellow
+ classmates for their lectures and presentations.</p>
 <hr>
-Last updated:  2007-06-03 by Gaurav Gupta
+Last updated:  2008-12-10 by John Morales
 
-
-</body></html>
+</body>
+</html>

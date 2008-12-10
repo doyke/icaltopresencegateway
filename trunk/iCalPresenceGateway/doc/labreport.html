@@ -75,9 +75,38 @@ all images in the same directory.
 
 <h2><a name="related_work">Related Work</a></h2>
 
-<p>Who else has been doing something similar and how your effort is
-different.
+<p>It seems that for the most part that such a iCalendar to SIP Presence function
+does not yet exist, at least in an open-source implementation or outside of a
+private corporate enterpise. There are likely many such applications with similar
+syncing functionality, but as far as we can determine the SIP Presence back end
+is a first.</p>
 
+<p>In terms of the iCalendar servers, a quick search will make it appear that
+there are many to choose from. When examined more closely, however, most of these
+"servers" appear to be actually be clients, and not perhaps not too trustworthy.
+(i.e., no source code, just a win32 binary, "Free iCalendar Server!")</p>
+
+<p>Other legitimately open-source implementations appear to have been abandoned:
+
+<ul>
+<li>
+	<a href="http://www.whenware.com/html/downloads.html">
+	http://www.whenware.com/html/downloads.html</a>
+</li>
+<li>
+	<a href="http://www.softwarestudio.org/libical/">
+	http://www.softwarestudio.org/libical/</a>
+</li>
+</ul>
+
+<p>The strongest implementations are both Apple's: the open-source <a href="http://www.calendarserver.org/">
+Darwin Calendar Server</a> written in Python and released in August, 2006; this
+server seems by far the most mature and has the best documentation. There is also
+a closed-source relative <a href="http://en.wikipedia.org/wiki/ICal_Server">iCal Server</a>
+included on OS X 10.5 (Leopard).
+
+<p>Similar to iCalendar servers, open source SIP Presence implementations appear
+to be few not very mature.</p>
 
 <h2>Background</h2>
 
@@ -102,8 +131,9 @@ rough complexity (in lines of code) and language used.
 <ul>
 <li>System Requirements, (OS, hardware specs, et al.)
 <li>Gateway installation and configuration
-<li>Quick-Start guide to running
-<li>Detailed explanation of list of configuration file parameters and running
+<li>Quick-Start guide
+<li>Detailed explanation of the configuration file parameters
+<li>Running the gateway
 </ul>
 
 <p>In addition, the <a href=install.html>install</a> page covers:
@@ -114,21 +144,23 @@ rough complexity (in lines of code) and language used.
 <li>Future work and enhancements
 </ul>
 
-<p>Note: Do not use JPEG for screen dumps, as they will make the writing
-illegible. Use GIF or PNG.
-
-<p>This part is meant to be part of the program documentation, while
-parts of this document might become a technical report or a conference
-paper.
-
 <h2><a name="measurements">Measurements</a></h2>
 
 <p>Where applicable, this describes any measurements or tests conducted.
 
 <h2>Task List</h2>
 
-<p>This describes who did what and what was copied from somewhere else.
+<p>We are using Google Code for project hosting, and in turn using its issue
+tracker for tasks. Below is a current snapshot of the issue list:</p>
 
+<img src="images/issues.png" alt="Current issues list"></img>
+
+<p>You may view this issue list yourself at this site:<br/>
+<a href="http://code.google.com/p/icaltopresencegateway/issues/list">
+http://code.google.com/p/icaltopresencegateway/issues/list
+</a>
+
+<!--
 <h2><a name="references">References</a></h2>
 
 <dl compact>
@@ -141,8 +173,7 @@ HTML</a></em>, Podunk University Press, Podunk, NY, 1976.
 <dd>International Telecommunications Union, <em>G.764:  General
 Aspects of Digital Transmission Systems; Terminal Equipment:  Voice
 Packetization</em>, Geneva, 1996.
-
-</dl>
+</dl>-->
 
 <hr>
 Last updated:  1998-05-13 by <a
