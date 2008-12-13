@@ -69,7 +69,6 @@ public class GatewayUser implements Serializable
 	private GatewayUser(String primaryKey, CalendarAccount calAccount, JabberAccount jabAccount)
 	{
 		this._lastModifiedMap = new HashMap<String, Date>();
-		
 		this._primaryKey = primaryKey;
 		this._calendarAccount = calAccount;
 		this._jabberAccount = jabAccount;
@@ -143,8 +142,9 @@ public class GatewayUser implements Serializable
 	 */
 	public Map<String, Date> getLastModifiedMap() { return _lastModifiedMap; }
 	
-	private boolean isNewEvent(String uid) 		{ return !(_lastModifiedMap.containsKey(uid)); }
-	private long getModifiedTime(String uid) 	{ return _lastModifiedMap.get(uid).getTime(); }
+	private boolean isNewEvent(String uid) 			{ return !(_lastModifiedMap.containsKey(uid)); }
+	private long getModifiedTime(String uid) 		{ return _lastModifiedMap.get(uid).getTime(); }
+	public String getPrimaryKey() 					{ return _primaryKey; }
 	
 	private boolean isEventModified(long lastModified, String uid)
 	{
