@@ -28,7 +28,7 @@ public class Presence {
     private Presence() {
     }
 
-	public static void sendMessage(String summary, String description,
+	public static void sendMessage(String userid, String summary, String description,
 			String location, String category, Date start, Date end)
 	{
 		Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to calendar event");

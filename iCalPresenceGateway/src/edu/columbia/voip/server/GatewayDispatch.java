@@ -121,7 +121,8 @@ public class GatewayDispatch implements Runnable
 		end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
 		
 		// Send SIP presence message
-		Presence.sendMessage(	propertyMap.get("SUMMARY").getValue(), 
+		Presence.sendMessage(	_user.getPrimaryKey(),
+								propertyMap.get("SUMMARY").getValue(), 
 								propertyMap.get("DESCRIPTION").getValue(), 
 								propertyMap.get("LOCATION").getValue(), 
 								propertyMap.get("CATEGORIES").getValue(), 
