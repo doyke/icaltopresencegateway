@@ -3,18 +3,25 @@
  */
 package edu.columbia.voip.user;
 
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.Socket;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.logging.Level;
+
+import com.sun.corba.se.pept.encoding.OutputObject;
 
 import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Property;
 
 import edu.columbia.voip.ical.CalDavConnection;
+import edu.columbia.voip.server.conf.ServerParameters;
 
 /**
  * @author jmoral
@@ -31,6 +38,8 @@ public class GatewayUser implements Serializable
 	private CalendarAccount _calendarAccount = null;
 	
 	private Map<String, Date> _lastModifiedMap = null;
+
+	private String _primaryKey = null;
 	
 	/**
 	 * @return the _caldavConn
@@ -52,27 +61,30 @@ public class GatewayUser implements Serializable
 		this._lastModifiedMap = new HashMap<String, Date>();
 		this._calendarAccount = new CalendarAccount(user, pass, host, uri, port, ssl);
 		
-		// FIXME: need to be getting actual jabber credentials here.
-		this._jabberAccount = new JabberAccount(user, pass, host);
+		// TODO: dropping Jabber support
+		this._jabberAccount = null;//new JabberAccount(user, pass, host);
 		this._caldavConn = CalDavConnection.createConnection(_calendarAccount);
 	}
 	
-	private GatewayUser(CalendarAccount calAccount, JabberAccount jabAccount)
+	private GatewayUser(String primaryKey, CalendarAccount calAccount, JabberAccount jabAccount)
 	{
+		this._lastModifiedMap = new HashMap<String, Date>();
+		
+		this._primaryKey = primaryKey;
 		this._calendarAccount = calAccount;
 		this._jabberAccount = jabAccount;
 		this._caldavConn = CalDavConnection.createConnection(_calendarAccount);
 	}
 	
-	public static GatewayUser createUser(String user, char[] pass, String host, String uri, int port, boolean ssl)
-	{
-		GatewayUser newUser = new GatewayUser(user, pass, host, uri, port, ssl);
-		return newUser;
-	}
+//	private static GatewayUser createUser(String user, char[] pass, String host, String uri, int port, boolean ssl)
+//	{
+//		GatewayUser newUser = new GatewayUser(user, pass, host, uri, port, ssl);
+//		return newUser;
+//	}
 
-	public static GatewayUser createUser(CalendarAccount calAccount, JabberAccount jabAccount)
+	public static GatewayUser createUser(String primaryKey, CalendarAccount calAccount, JabberAccount jabAccount)
 	{
-		GatewayUser newUser = new GatewayUser(calAccount, jabAccount);
+		GatewayUser newUser = new GatewayUser(primaryKey, calAccount, jabAccount);
 		return newUser;
 	}
 
@@ -88,13 +100,20 @@ public class GatewayUser implements Serializable
 		boolean shouldSend = false;
 		// TODO: Create a new exception in the event that I can't determine if we should
 		// 		 pass this calendar event to presence or not.
-		Property modifiedProp 	= event.getProperty("LAST-MODIFIED");
-		Property uidProp 		= event.getProperty("UID");
+		Component component = event.getComponent("VEVENT");
+		if (component == null)
+			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
 		
-		if (modifiedProp == null)
-			throw new ObjectNotFoundException("Could not get last-modified property from calendar event?");
+		Property modifiedProp 	= component.getProperty("LAST-MODIFIED");
+		Property uidProp 		= component.getProperty("UID");
+		
 		if (uidProp == null)
 			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
+		if (modifiedProp == null)
+		{
+			System.err.println("Could not get last-modified property from calendar event. That means it's brand new? adding it.");
+			return true;
+		}
 		
 		net.fortuna.ical4j.model.Date eventModifiedDate = new net.fortuna.ical4j.model.Date(modifiedProp.getValue());
 		long lastModified = eventModifiedDate.getTime();

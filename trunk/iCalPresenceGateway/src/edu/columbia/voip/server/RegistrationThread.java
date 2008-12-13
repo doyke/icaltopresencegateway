@@ -25,17 +25,21 @@ public class RegistrationThread implements Runnable {
     private ServerSocket _serverSocket = null;
     private GatewayThread _gatewayThread = null;
     
+    private Logger _logger = null;
+    
     /**
      * Creates a new instance of Server
      */
     public RegistrationThread(GatewayThread gatewayThread) throws IOException {
+    	this._logger = Logger.getLogger(getClass().getName());
+		
     	_gatewayThread = gatewayThread;
         _serverSocket = new ServerSocket(ServerParameters.REGISTRATION_PORT);
     }
     
     public void run()
     {
-        Logger.getLogger(getClass().getName()).log(Level.INFO, "Starting up registration thread");
+    	_logger.log(Level.INFO, "Starting up registration thread");
         
         while (true)
         {
@@ -43,7 +47,7 @@ public class RegistrationThread implements Runnable {
                 Socket clientSocket = _serverSocket.accept();
                 (new RegistrationDispatch(_gatewayThread, clientSocket)).start();
             } catch (IOException e) {
-            	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "got exception in Registration thread.", e);
+            	_logger.log(Level.SEVERE, "got exception in Registration thread.", e);
             }
         }
     }

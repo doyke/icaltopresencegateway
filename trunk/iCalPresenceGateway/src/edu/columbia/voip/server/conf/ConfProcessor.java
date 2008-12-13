@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
 
 
 public class ConfProcessor
@@ -42,7 +44,7 @@ public class ConfProcessor
 			setParameter(key, value);
 		} while (true);
 		
-		try { in.close(); }
+		try { in.close(); ServerParameters.FILEHANDLER = new FileHandler(ServerParameters.LOGFILE); }
 		catch (IOException e) { throw new ConfParseException(e); }
 	}
 
@@ -55,6 +57,25 @@ public class ConfProcessor
 				ServerParameters.THREAD_POOL_SIZE = Integer.parseInt(value);
 			else if (key.equals("LogfileName"))
 				ServerParameters.LOGFILE = value;
+			else if (key.equals("LogfileLevel"))
+			{
+				if (value.equalsIgnoreCase("all"))
+					ServerParameters.LOG_LEVEL = Level.ALL;
+				else if (value.equalsIgnoreCase("finest"))
+					ServerParameters.LOG_LEVEL = Level.FINEST;
+				else if (value.equalsIgnoreCase("fine"))
+					ServerParameters.LOG_LEVEL = Level.FINE;
+				else if (value.equalsIgnoreCase("info"))
+					ServerParameters.LOG_LEVEL = Level.INFO;
+				else if (value.equalsIgnoreCase("severe"))
+					ServerParameters.LOG_LEVEL = Level.SEVERE;
+				else if (value.equalsIgnoreCase("warning"))
+					ServerParameters.LOG_LEVEL = Level.WARNING;
+				else if (value.equalsIgnoreCase("off"))
+					ServerParameters.LOG_LEVEL = Level.OFF;
+				else
+					throw new ConfParseException("No such LogfileLevel value: '" + value + "'");
+			}
 			else if (key.equals("PollInterval"))
 				ServerParameters.POLL_INTERVAL = Long.parseLong(value);
 			else if (key.equals("ICalendarHost"))

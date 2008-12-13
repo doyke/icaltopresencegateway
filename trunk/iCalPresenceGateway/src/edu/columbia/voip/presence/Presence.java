@@ -10,9 +10,11 @@
 package edu.columbia.voip.presence;
 
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.columbia.voip.user.GatewayUser;
-import net.fortuna.ical4j.model.Calendar;
+
 
 /**
  *
@@ -20,16 +22,14 @@ import net.fortuna.ical4j.model.Calendar;
  */
 public class Presence {
     
-    /**
-     * Creates a new instance of Presence
-     */
-    public Presence() {
-        // TODO: here we can send messages to presence server
+    /** Cannot be instantiated for now-- only have the one static sendMessage method */
+    private Presence() {
     }
 
 	public static void sendMessage(String summary, String description,
 			String location, String category, Date start, Date end)
 	{
+		Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to calendar event");
 		// TODO @Milind, send this calendar event to the presence server for user <user>
 	}
 }

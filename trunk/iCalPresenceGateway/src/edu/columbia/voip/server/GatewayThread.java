@@ -24,14 +24,16 @@ import edu.columbia.voip.user.GatewayUser;
  */
 public class GatewayThread extends Thread
 {
-	
 	private List<GatewayUser> _gatewayUsers = null;
 	
 	private ExecutorService _execService = null;
+	
+	private Logger _logger = null;
 
 	public GatewayThread(List<GatewayUser> list)
 	{
 		this._gatewayUsers = list;
+		this._logger = Logger.getLogger(getClass().getName());
 		_execService = Executors.newFixedThreadPool(ServerParameters.THREAD_POOL_SIZE);
 	}
 	
@@ -53,7 +55,7 @@ public class GatewayThread extends Thread
 			_execService.execute(new GatewayDispatch(iter.next()));
 		
 		try { Thread.sleep(ServerParameters.POLL_INTERVAL); }
-		catch (InterruptedException e) { Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Interrupted exception caught", e); }
+		catch (InterruptedException e) { _logger.log(Level.SEVERE, "Interrupted exception caught", e); }
 	}
 
 	public synchronized void addGatewayUser(Collection<GatewayUser> users) 	{ _gatewayUsers.addAll(users); }

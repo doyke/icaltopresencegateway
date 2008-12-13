@@ -9,6 +9,9 @@
 
 package edu.columbia.voip.server.conf;
 
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+
 /**
  *
  * @author jmoral
@@ -16,7 +19,13 @@ package edu.columbia.voip.server.conf;
 public class ServerParameters {
     
     /** Filename of server log that record debug messages/events. */
-    public static String 		LOGFILE = "ical_gateway.log";
+    public static String 		LOGFILE = "icalgateway.log";
+    
+    /** Used by Java logging for naming the log file */
+    public static FileHandler 	FILEHANDLER = null;
+    
+    /** Specifies the level of detail saved in the logfile */ 
+    public static Level 		LOG_LEVEL = Level.INFO;
     
     /** Thread pool size for polling registered users */
     public static int 			THREAD_POOL_SIZE = 30;
@@ -34,7 +43,7 @@ public class ServerParameters {
     public static boolean 		ICALENDAR_USE_SSL = true;
 
     /** Hostname where the PRESENCE server resides */
-    public static String 		PRESENCE_HOSTNAME = "128.59.18.182";
+    public static String 		PRESENCE_HOSTNAME = "presence.cs.columbia.edu";
     
     /** PRESENCE server destination port */
     public static int 			PRESENCE_PORT = 5060;
@@ -63,7 +72,6 @@ public class ServerParameters {
 	
 	/** Mysql password for MYSQL_REGISTRATION_DB database */
 	public static String		MYSQL_PASSWORD = "";
-	
 
 	public static String getParametersString()
 	{

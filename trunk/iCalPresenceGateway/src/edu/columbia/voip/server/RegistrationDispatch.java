@@ -11,10 +11,12 @@ package edu.columbia.voip.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.columbia.voip.server.conf.ServerParameters;
 import edu.columbia.voip.user.GatewayUser;
 
 /**
@@ -26,27 +28,35 @@ public class RegistrationDispatch extends Thread {
     private Socket _clientSocket = null;
     private GatewayThread _gatewayThread = null;
     
+    private Logger _logger = null;
+    
     /** Creates a new instance of ServerDispatch */
     public RegistrationDispatch(GatewayThread thread, Socket socket) {
-    	this._gatewayThread = thread;
+    	this._logger = Logger.getLogger(getClass().getName());
+		this._gatewayThread = thread;
         this._clientSocket = socket;
     }
     
     public void run()
     {
         // TODO: handle client connection here
-        Logger.getLogger(getClass().getName()).log(Level.INFO, "Got registration connection from: " + _clientSocket.getInetAddress().getHostAddress());
-        Logger.getLogger(getClass().getName()).log(Level.INFO, "Begin reading stream for serialized GatewayUser");
-        
+    	_logger.log(Level.INFO, "Got registration connection from: " + _clientSocket.getInetAddress().getHostAddress());
+    	_logger.log(Level.INFO, "Begin reading stream for serialized GatewayUser");
+    	GatewayUser newUser = null;
+    	
         // TODO: Read inputsteam from servlet to get GatewayUser
-        InputStream in = null;
-        try { _clientSocket.getInputStream(); }
-        catch (IOException e)	{ Logger.getLogger(getClass().getName()).log(Level.SEVERE, "caught IOException in registration dispatch", e); }
+        try { 
+        	ObjectInputStream ois = new ObjectInputStream(_clientSocket.getInputStream());
+        	newUser = (GatewayUser)ois.readObject();
+        	ois.close();
+    	}
+        catch (IOException e)	{ _logger.log(Level.SEVERE, "caught IOException in registration dispatch", e); }
+        catch (ClassNotFoundException e) { _logger.log(Level.SEVERE, "caught ClassNotFoundException in registration dispatch.", e); }
         
-        GatewayUser user = null;
-        // TODO: Call addGatewayUser on main GatewayThread
-        // FIXME: this guy will need a handle to the GatewayThread, passed in on the constructor.
-        _gatewayThread.addGatewayUser(user);
+        if (newUser != null)
+        	_gatewayThread.addGatewayUser(newUser);
+        else
+        	_logger.log(Level.SEVERE, "user received from registration servlet is NULL, not adding to gateway thread.");
     }
     
 }
