@@ -11,13 +11,24 @@ package edu.columbia.voip.server;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TooManyListenersException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.sip.InvalidArgumentException;
+import javax.sip.ObjectInUseException;
+import javax.sip.PeerUnavailableException;
+import javax.sip.TransportNotSupportedException;
+
+import edu.columbia.voip.presence.Presence;
+import edu.columbia.voip.presence.SIPException;
+import edu.columbia.voip.presence.SipLayer;
 import edu.columbia.voip.server.conf.ConfParseException;
 import edu.columbia.voip.server.conf.ConfProcessor;
 import edu.columbia.voip.server.conf.ServerParameters;
@@ -76,25 +87,38 @@ public class Main
             _registrationThread.join();
         } 
     	catch (ConfParseException e) 	{ die(e); }
+    	catch (DatabaseException e)		{ die(e); }
         catch (IOException e)			{ die(e); }
-        catch (DatabaseException e)		{ die(e); }
         catch (InterruptedException e)	{ die(e); }
         catch (Exception e)				{ die(e); }
     }
 
-	private void doBootstrap() throws ConfParseException, DatabaseException
+	private void doBootstrap() throws ConfParseException, DatabaseException, SIPException
 	{
 		// parse conf file and load configurations into ServerParameters
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Loading configurations from gateway.conf...");
 		ConfProcessor.loadConfFile();
 		
-		Logger.getLogger("").addHandler(ServerParameters.FILEHANDLER);
-		Logger.getLogger("").setLevel(ServerParameters.LOG_LEVEL);
+		// initialized sip stack
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "Initializing SIP Layer...");
+		SipLayer sipLayer = null;
+		try { sipLayer = new SipLayer(InetAddress.getLocalHost().getHostAddress(), 5061); }
+		catch (TooManyListenersException e) 	{ throw new SIPException(e); }
+		catch (ObjectInUseException e) 			{ throw new SIPException(e); }
+		catch (UnknownHostException e) 			{ throw new SIPException(e); }
+		catch (InvalidArgumentException e) 		{ throw new SIPException(e); }
+		catch (TransportNotSupportedException e){ throw new SIPException(e); }
+		catch (PeerUnavailableException e) 		{ throw new SIPException(e); }
+		Presence.setSipLayer(sipLayer);
 		
 		// connect to DB and get registrations
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Building MySQL database connection.");
 		_dbConnection = DBEngine.buildConnection();
 		_userList = _dbConnection.getAllRegisteredUsers();
+		
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "Bootstrap done, setting up logger to start writing to file...");
+		Logger.getLogger("").addHandler(ServerParameters.FILEHANDLER);
+		Logger.getLogger("").setLevel(ServerParameters.LOG_LEVEL);
 	}
 
 	/**

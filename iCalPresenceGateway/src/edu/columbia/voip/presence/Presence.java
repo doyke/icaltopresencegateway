@@ -21,6 +21,8 @@ import edu.columbia.voip.user.GatewayUser;
  * @author jmoral
  */
 public class Presence {
+	
+	private static SipLayer _sipLayer = null;
     
     /** Cannot be instantiated for now-- only have the one static sendMessage method */
     private Presence() {
@@ -31,5 +33,10 @@ public class Presence {
 	{
 		Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to calendar event");
 		// TODO @Milind, send this calendar event to the presence server for user <user>
+	}
+
+	public static void setSipLayer(SipLayer _sipLayer)
+	{
+		Presence._sipLayer = _sipLayer;
 	}
 }

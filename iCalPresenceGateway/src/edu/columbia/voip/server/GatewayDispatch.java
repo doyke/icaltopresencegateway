@@ -45,7 +45,6 @@ public class GatewayDispatch implements Runnable
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
-	@Override
 	public void run()
 	{
 		_logger.log(Level.FINE, 
@@ -102,8 +101,7 @@ public class GatewayDispatch implements Runnable
 
 	private void parseAndSend(Calendar event) throws ObjectNotFoundException, ParseException
 	{
-		// TODO parse out calendar properties into Strings and Dates, then send to Milind.
-		Map <String, Property> propertyMap = new HashMap<String, Property>();
+		Map<String, Property> propertyMap = new HashMap<String, Property>();
 		Date start = null;
 		Date end = null;
 		
