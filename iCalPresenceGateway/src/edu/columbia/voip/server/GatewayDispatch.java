@@ -5,8 +5,10 @@ package edu.columbia.voip.server;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,7 +20,6 @@ import net.fortuna.ical4j.model.Property;
 
 import edu.columbia.voip.ical.NoCalendarEventsException;
 import edu.columbia.voip.presence.Presence;
-import edu.columbia.voip.server.conf.ServerParameters;
 import edu.columbia.voip.user.GatewayUser;
 
 /**
@@ -99,17 +100,33 @@ public class GatewayDispatch implements Runnable
         }
 	}
 
-	private void parseAndSend(Calendar event)
+	private void parseAndSend(Calendar event) throws ObjectNotFoundException, ParseException
 	{
 		// TODO parse out calendar properties into Strings and Dates, then send to Milind.
-		String summary = null;
-		String description = null;
-		String location = null;
-		String category = null;
+		Map <String, Property> propertyMap = new HashMap<String, Property>();
 		Date start = null;
 		Date end = null;
 		
-			
-		Presence.sendMessage(summary, description, location, category, start, end);
+		Component component = event.getComponent("VEVENT");
+		if (component == null)
+			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
+		
+		propertyMap.put("SUMMARY", 			component.getProperty("SUMMARY"));
+		propertyMap.put("LAST-MODIFIED", 	component.getProperty("LAST-MODIFIED"));
+		propertyMap.put("DESCRIPTION", 		component.getProperty("DESCRIPTION"));
+		propertyMap.put("LOCATION", 		component.getProperty("LOCATION"));
+		propertyMap.put("CATEGORIES", 		component.getProperty("CATEGORIES"));
+		propertyMap.put("DTSTART", 			component.getProperty("DTSTART"));
+		propertyMap.put("DTEND", 			component.getProperty("DTEND"));
+		
+		start = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTSTART").getValue())).getTime() );
+		end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
+		
+		// Send SIP presence message
+		Presence.sendMessage(	propertyMap.get("SUMMARY").getValue(), 
+								propertyMap.get("DESCRIPTION").getValue(), 
+								propertyMap.get("LOCATION").getValue(), 
+								propertyMap.get("CATEGORIES").getValue(), 
+								start, end);
 	}
 }
