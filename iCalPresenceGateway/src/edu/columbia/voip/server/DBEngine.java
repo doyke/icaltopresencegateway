@@ -18,11 +18,14 @@ public class DBEngine {
 
 	private Connection _dbConn = null;
 	
-	// FIXME: not the right query
-	private String QUERY_GET_ALL_USERS = "SELECT * FROM registered_users";
+	private final String QUERY_GET_ALL_USERS = "SELECT * FROM registrations";
+	
+	private Logger _logger = null;
 	
     private DBEngine() throws DatabaseException
 	{
+    	this._logger = Logger.getLogger(getClass().getName());
+		
     	// Register MySQL driver
     	try { Class.forName("com.mysql.jdbc.Driver").newInstance(); }
     	catch (InstantiationException e) { throw new DatabaseException(e); }
@@ -62,7 +65,7 @@ public class DBEngine {
      */
 	public List<GatewayUser> getAllRegisteredUsers() throws DatabaseException
     {
-		Logger.getLogger(getClass().getName()).log(Level.INFO, "Retreiving registered users from database.");
+		_logger.log(Level.INFO, "Retreiving registered users from database.");
 		List<GatewayUser> allUsers = new ArrayList<GatewayUser>();
 		ResultSet resultSet = null;
         
@@ -72,11 +75,12 @@ public class DBEngine {
 		
 			while (resultSet.next())
 			{
-				// FIXME: wrong database columns.. update when DB created.
+				String primaryKey = resultSet.getString("cuid");
 				CalendarAccount calAccount = getCalendarAccount(resultSet);
-				// FIXME: wrong database columns.. update when DB created.
-				JabberAccount jabAccount = getJabberAccount(resultSet);
-				allUsers.add(GatewayUser.createUser(calAccount, jabAccount));
+
+				// TODO: dropping Jabber support for now. 
+				JabberAccount jabAccount = null;//getJabberAccount(resultSet);
+				allUsers.add(GatewayUser.createUser(primaryKey, calAccount, jabAccount));
 			}
 		}
 		catch (SQLException e) { throw new DatabaseException(e); }
@@ -109,12 +113,12 @@ public class DBEngine {
 	private CalendarAccount getCalendarAccount(ResultSet resultSet) throws SQLException
 	{
 		CalendarAccount c = new CalendarAccount(
-					resultSet.getString("username"),
-					resultSet.getString("password").toCharArray(),
-					resultSet.getString("host"),
-					resultSet.getString("uri"),
-					resultSet.getInt("port"),
-					resultSet.getBoolean("ssl")
+					resultSet.getString("ical_userid"),
+					resultSet.getString("ical_passwd").toCharArray(),
+					resultSet.getString("ical_host"),
+					resultSet.getString("ical_uri"),
+					resultSet.getInt("ical_port"),
+					resultSet.getBoolean("ical_ssl")
 					);
 		return c;
 	}

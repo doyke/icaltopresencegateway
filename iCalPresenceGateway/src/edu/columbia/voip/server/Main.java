@@ -88,6 +88,9 @@ public class Main
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Loading configurations from gateway.conf...");
 		ConfProcessor.loadConfFile();
 		
+		Logger.getLogger("").addHandler(ServerParameters.FILEHANDLER);
+		Logger.getLogger("").setLevel(ServerParameters.LOG_LEVEL);
+		
 		// connect to DB and get registrations
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Building MySQL database connection.");
 		_dbConnection = DBEngine.buildConnection();

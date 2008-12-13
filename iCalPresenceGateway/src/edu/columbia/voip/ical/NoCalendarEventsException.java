@@ -10,17 +10,14 @@ public class NoCalendarEventsException extends Exception {
 
 	public NoCalendarEventsException(String message) {
 		super(message);
-		// TODO Auto-generated constructor stub
 	}
 
 	public NoCalendarEventsException(Throwable cause) {
 		super(cause);
-		// TODO Auto-generated constructor stub
 	}
 
 	public NoCalendarEventsException(String message, Throwable cause) {
 		super(message, cause);
-		// TODO Auto-generated constructor stub
 	}
 
 }
