@@ -90,8 +90,17 @@ public class addServlet extends HttpServlet {
         CalendarAccount calAccount =  new CalendarAccount(icalid, icalpass.toCharArray(),icalurl, icaluri, Integer.parseInt(icalport), sslVal);        
         GatewayUser newUser = GatewayUser.createUser(uni, calAccount, null);        
         Socket socket = new Socket("127.0.0.1", ServerParameters.REGISTRATION_PORT);        
-        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());        
-        oos.writeObject(newUser);
+        //ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());        
+        DataOutputStream oos = new DataOutputStream(socket.getOutputStream());        
+        //oos.writeObject(newUser);
+        oos.writeUTF(uni);
+        oos.writeUTF(icalid);
+        oos.writeUTF(icalpass);
+        oos.writeUTF(icalurl);
+        oos.writeUTF(icaluri);
+        oos.writeUTF(icalport);
+        oos.writeUTF(ssl);
+        
         oos.close(); 
         
        
