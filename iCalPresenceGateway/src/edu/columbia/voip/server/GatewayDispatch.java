@@ -16,6 +16,7 @@ import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.connector.ObjectStoreException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Property;
 
 import edu.columbia.voip.ical.NoCalendarEventsException;
@@ -116,15 +117,19 @@ public class GatewayDispatch implements Runnable
 		propertyMap.put("CATEGORIES", 		component.getProperty("CATEGORIES"));
 		propertyMap.put("DTSTART", 			component.getProperty("DTSTART"));
 		propertyMap.put("DTEND", 			component.getProperty("DTEND"));
+		propertyMap.put("DURATION",			component.getProperty("DURATION"));
 		
 		start = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTSTART").getValue())).getTime() );
 		if (propertyMap.get("DTEND") != null)
 			end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
-		else
+		else if (propertyMap.get("DURATION") != null)
 		{
-			_logger.log(Level.WARNING, "Calendar event does not have a DTEND property; hardcoding to 30 minutes past start.");
-			end = new Date( start.getTime() + (1000 * 60 * 30));
+			_logger.log(Level.WARNING, "Calendar event does not have a DTEND property; using duration instead.");
+			Dur duration = new Dur(propertyMap.get("DURATION").getValue());
+        	end = duration.getTime(start);
 		}
+		else
+			throw new ObjectNotFoundException("No end date nor duration? How can I tell when this event is over?");
 		
 		// Send SIP presence message
 		Presence.sendMessage(	_user.getPrimaryKey(),
