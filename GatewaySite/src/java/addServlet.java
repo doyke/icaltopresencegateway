@@ -54,8 +54,55 @@ public class addServlet extends HttpServlet {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        System.out.println("check1");
-        processRequest(request, response);
+
+        PrintWriter out = response.getWriter();
+        boolean userExists = false;
+        String enteredUni = request.getParameter("enteredUni");
+
+        Connection conn = null;
+
+        try {
+
+            try {
+
+                String userName = "btuser";
+                String passwd = "passwd";
+                String url = "jdbc:mysql://localhost:3306/icalgateway";
+                Class.forName("com.mysql.jdbc.Driver").newInstance();
+                conn = DriverManager.getConnection(url, userName, passwd);
+                System.out.println("Database connection established");
+                Statement s = conn.createStatement();
+                String sqlquery = null;
+
+                sqlquery = "SELECT * FROM icalgateway.registrations where cuid='" + enteredUni + "';";
+                s.executeQuery(sqlquery);
+                ResultSet rs = s.getResultSet();
+                if (rs.next()) {
+                    userExists = true;
+                }
+                rs.close();
+                s.close();
+            } catch (Exception e) {
+                System.err.println(e);
+            } finally {
+                if (conn != null) {
+                    try {
+                        conn.close();
+                        System.out.println("Database connection terminated");
+
+                    } catch (Exception e) { /* ignore close errors */ }
+                }
+            }
+
+            if (userExists) {System.out.println("1");
+                out.println("1");
+            } else {System.out.println("2");
+                out.println("2");
+            }
+        } finally {
+            out.close();
+        }
+
     }
 
     /** 
@@ -77,21 +124,21 @@ public class addServlet extends HttpServlet {
         String icalport = request.getParameter("icalport");
         String ssl = request.getParameter("ssl");
         boolean sslVal = false;
-        
-        if(ssl.equals("Yes")){
+
+        if (ssl.equals("Yes")) {
             sslVal = true;
-        }else{
+        } else {
             sslVal = false;
-        }        
+        }
 
         addUser(uni, icalid, icalpass, icalurl, icaluri, icalport, ssl);
-        
-      
-        CalendarAccount calAccount =  new CalendarAccount(icalid, icalpass.toCharArray(),icalurl, icaluri, Integer.parseInt(icalport), sslVal);        
-        GatewayUser newUser = GatewayUser.createUser(uni, calAccount, null);        
-        Socket socket = new Socket("127.0.0.1", ServerParameters.REGISTRATION_PORT);        
+
+
+        CalendarAccount calAccount = new CalendarAccount(icalid, icalpass.toCharArray(), icalurl, icaluri, Integer.parseInt(icalport), sslVal);
+        GatewayUser newUser = GatewayUser.createUser(uni, calAccount, null);
+        Socket socket = new Socket("127.0.0.1", ServerParameters.REGISTRATION_PORT);
         //ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());        
-        DataOutputStream oos = new DataOutputStream(socket.getOutputStream());        
+        DataOutputStream oos = new DataOutputStream(socket.getOutputStream());
         //oos.writeObject(newUser);
         oos.writeUTF(uni);
         oos.writeUTF(icalid);
@@ -100,10 +147,10 @@ public class addServlet extends HttpServlet {
         oos.writeUTF(icaluri);
         oos.writeUTF(icalport);
         oos.writeUTF(ssl);
-        
-        oos.close(); 
-        
-       
+
+        oos.close();
+
+
 
         response.sendRedirect("success.jsp");
 
@@ -121,16 +168,15 @@ public class addServlet extends HttpServlet {
     }// </editor-fold>
 
     public void addUser(String uni, String icalid, String icalpass, String icalurl, String icaluri, String icalport, String ssl) {
-        
+
         int sslVal;
-        
-        if(ssl.equals("Yes")){
-            sslVal = 1;            
-        }
-        else{
+
+        if (ssl.equals("Yes")) {
+            sslVal = 1;
+        } else {
             sslVal = 0;
         }
-        
+
         Connection conn = null;
 
         try {
@@ -142,22 +188,22 @@ public class addServlet extends HttpServlet {
             conn = DriverManager.getConnection(url, userName, passwd);
             System.out.println("Database connection established");
             Statement s = conn.createStatement();
-            String sqlquery=null;
-            
-            sqlquery = "INSERT INTO icalgateway.registrations (cuid, ical_userid, ical_passwd, ical_host, ical_uri, ical_port, ical_ssl) VALUES ('"+uni+"','"+icalid+"','"+icalpass+"','"+icalurl+"','"+icaluri+"','"+icalport+"','"+sslVal+"');";
+            String sqlquery = null;
+
+            sqlquery = "INSERT INTO icalgateway.registrations (cuid, ical_userid, ical_passwd, ical_host, ical_uri, ical_port, ical_ssl) VALUES ('" + uni + "','" + icalid + "','" + icalpass + "','" + icalurl + "','" + icaluri + "','" + icalport + "','" + sslVal + "');";
             s.executeUpdate(sqlquery);
-            
+
             s.close();
             conn.close();
-            
+
             String url2 = "jdbc:mysql://128.59.18.182:3306/Presence";
             conn = DriverManager.getConnection(url2, userName, passwd);
             s = conn.createStatement();
-            sqlquery = "INSERT INTO presence.login(user,password) VALUES ('"+uni+"','"+icalpass+"')";
+            sqlquery = "INSERT INTO presence.login(user,password) VALUES ('" + uni + "','" + icalpass + "')";
             s.executeUpdate(sqlquery);
             s.close();
-            
-            
+
+
 
         } catch (Exception e) {
             System.err.println(e);
