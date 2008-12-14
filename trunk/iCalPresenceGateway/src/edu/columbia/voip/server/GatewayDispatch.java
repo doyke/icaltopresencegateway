@@ -74,8 +74,9 @@ public class GatewayDispatch implements Runnable
 			dumpEvent(event);
 			
 			try {
-				if (_user.sendEventToPresence(event))
-					parseAndSend(event);
+				if (isCurrentEvent(event))
+					if (isEventNewOrModified(event))
+						parseAndSend(event);
 			} catch (ObjectNotFoundException e) { 
 				_logger.log(Level.SEVERE, "caught ObjectNotFoundException while checking if presence needs updating", e);
 			} catch (ParseException e) {
@@ -99,6 +100,84 @@ public class GatewayDispatch implements Runnable
             _logger.log(Level.FINE, propertyInfo);
         }
 	}
+	
+	private boolean isCurrentEvent(Calendar event) throws ParseException, ObjectNotFoundException
+	{
+		Component component = event.getComponent(Component.VEVENT);
+		Date start = getEventStartDate(component.getProperty(Property.DTSTART));
+		Date end = getEventEndDate(component.getProperty("DTEND"), component.getProperty(Property.DURATION), start);
+		
+		if (isEventActive(start, end))
+		{
+			_logger.log(Level.INFO, "Event '" + component.getProperty(Property.SUMMARY).getValue() + "' IS currently happening. SENDING presence.");
+			return true;
+		}
+		else
+		{
+			_logger.log(Level.INFO, "Event '" + component.getProperty(Property.SUMMARY).getValue() + "' is not currently happening. Not sending presence.");
+			return false;
+		}
+	}
+	
+	
+	/**
+	 * Check if given event needs to be passed along to presence server.
+	 * @param event
+	 * @return true if we need to pass this event to presence, false if presence server is already up to date.
+	 * @throws ObjectNotFoundException
+	 * @throws ParseException
+	 */
+	private boolean isEventNewOrModified(Calendar event) throws ObjectNotFoundException, ParseException
+	{
+		// TODO: Create a new exception in the event that I can't determine if we should
+		// 		 pass this calendar event to presence or not.
+		boolean shouldSend = false;
+		String eventHashUid = null;
+		
+		Component component = event.getComponent(Component.VEVENT);
+		if (component == null)
+			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
+		
+		Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
+		Property propUid 		= component.getProperty(Property.UID);
+		Property propCreated	= component.getProperty(Property.CREATED);
+		Property propStamp		= component.getProperty(Property.DTSTAMP);
+		
+		if (propUid == null)
+			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
+		if (propModified == null && propCreated == null && propStamp == null)
+			throw new ObjectNotFoundException("Could not get any time property from calendar event?");
+		
+		// need to use DateTime to get necessary time precision
+		net.fortuna.ical4j.model.DateTime eventHashDate = null;
+		eventHashUid = propUid.getValue();
+		
+		// first consider last-modified date, then created date, then finally timestamp date
+		if (propModified != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
+		else if (propCreated != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
+		else if (propStamp != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
+		
+		if (isNewEvent(eventHashUid) ||						// either first time we're seeing this event, OR 
+			isEventModified(eventHashDate, eventHashUid))	// event was updated since we last saw it.
+		{
+			// indicate that we need to update presence with this calendar event.
+			shouldSend = true;
+			putModifiedDate(eventHashUid, eventHashDate);
+		}
+		
+		Logger.getLogger(getClass().getName()).log(Level.FINE, (shouldSend ? "" : "NOT ") + "doing send for SIP message uid: " + eventHashUid);
+		
+		return shouldSend;
+	}
+	
+	private boolean isEventActive(Date start, Date end)
+	{
+		Date now = new Date();
+		return (now.after(start) && now.before(end)); 
+	}
 
 	private void parseAndSend(Calendar event) throws ObjectNotFoundException, ParseException
 	{
@@ -110,45 +189,85 @@ public class GatewayDispatch implements Runnable
 		if (component == null)
 			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
 		
-		propertyMap.put("SUMMARY", 			component.getProperty("SUMMARY"));
-		propertyMap.put("LAST-MODIFIED", 	component.getProperty("LAST-MODIFIED"));
-		propertyMap.put("DESCRIPTION", 		component.getProperty("DESCRIPTION"));
-		propertyMap.put("LOCATION", 		component.getProperty("LOCATION"));
-		propertyMap.put("CATEGORIES", 		component.getProperty("CATEGORIES"));
-		propertyMap.put("DTSTART", 			component.getProperty("DTSTART"));
-		propertyMap.put("DTEND", 			component.getProperty("DTEND"));
-		propertyMap.put("DURATION",			component.getProperty("DURATION"));
+		propertyMap.put(Property.SUMMARY, 			component.getProperty(Property.SUMMARY));
+		propertyMap.put(Property.LAST_MODIFIED, 	component.getProperty(Property.LAST_MODIFIED));
+		propertyMap.put(Property.DESCRIPTION, 		component.getProperty(Property.DESCRIPTION));
+		propertyMap.put(Property.LOCATION, 			component.getProperty(Property.LOCATION));
+		propertyMap.put(Property.CATEGORIES, 		component.getProperty(Property.CATEGORIES));
+		propertyMap.put(Property.DTSTART, 			component.getProperty(Property.DTSTART));
+		propertyMap.put(Property.DTEND, 			component.getProperty(Property.DTEND));
+		propertyMap.put(Property.DURATION,			component.getProperty(Property.DURATION));
 		
-		// try using datetime first to get necessary precision. if it throws a ParseException, 
-		// it's probably because it's an all day event so try again using date instead of datetime.
-		try { start = new Date( (new net.fortuna.ical4j.model.DateTime(propertyMap.get("DTSTART").getValue())).getTime() ); }
-		catch (ParseException e) {
-			start = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTSTART").getValue())).getTime() );
-		}
+		start = getEventStartDate(propertyMap.get(Property.DTSTART));
+		end = getEventEndDate(propertyMap.get(Property.DTEND), propertyMap.get(Property.DURATION), start);
 		
-		// same thing as above note-- try using datetime first, then use date if necessary. 
-		if (propertyMap.get("DTEND") != null)
+		// Send SIP presence message
+		Presence.sendMessage(	_user.getPrimaryKey(),
+								propertyMap.get(Property.SUMMARY) == null 		? "[No Summary]" 	: propertyMap.get(Property.SUMMARY).getValue(), 
+								propertyMap.get(Property.DESCRIPTION) == null 	? "[No Description]": propertyMap.get(Property.DESCRIPTION).getValue(),  
+								propertyMap.get(Property.LOCATION) == null 		? "[No Location]" 	: propertyMap.get(Property.LOCATION).getValue(), 
+								propertyMap.get(Property.CATEGORIES) == null 	? "[No Categories]" : propertyMap.get(Property.CATEGORIES).getValue(), 
+								start, end);
+	}
+
+	/**
+	 * Parse properties to get end Date (java.util). First tries to get DTEND, and if
+	 * that doesn't exist then adds DURATION to start date.
+	 * @param propEnd
+	 * @param propDuration
+	 * @param start
+	 * @return java.util.Date of event's ending time.
+	 * @throws ParseException
+	 * @throws ObjectNotFoundException
+	 */
+	private Date getEventEndDate(Property propEnd, Property propDuration, Date start) 
+		throws ParseException, ObjectNotFoundException
+	{
+		Date end = null;
+		// same thing as getEventStartDate below-- try using datetime first, then use date if necessary. 
+		if (propEnd != null)
 		{
-			try { end = new Date( (new net.fortuna.ical4j.model.DateTime(propertyMap.get("DTEND").getValue())).getTime() ); }
+			try { end = new Date( (new net.fortuna.ical4j.model.DateTime(propEnd.getValue())).getTime() ); }
 			catch (ParseException e) {
-				end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
+				end = new Date( (new net.fortuna.ical4j.model.Date(propEnd.getValue())).getTime() );
 			}
 		}
-		else if (propertyMap.get("DURATION") != null)
+		else if (propDuration != null)
 		{
 			_logger.log(Level.WARNING, "Calendar event does not have a DTEND property; using duration instead.");
-			Dur duration = new Dur(propertyMap.get("DURATION").getValue());
+			Dur duration = new Dur(propDuration.getValue());
         	end = duration.getTime(start);
 		}
 		else
 			throw new ObjectNotFoundException("No end date nor duration? How can I tell when this event is over?");
-		
-		// Send SIP presence message
-		Presence.sendMessage(	_user.getPrimaryKey(),
-								propertyMap.get("SUMMARY") == null ? "[No Summary]" : propertyMap.get("SUMMARY").getValue(), 
-								propertyMap.get("DESCRIPTION") == null ? "[No Description]" : propertyMap.get("DESCRIPTION").getValue(),  
-								propertyMap.get("LOCATION") == null ? "[No Location]" : propertyMap.get("LOCATION").getValue(), 
-								propertyMap.get("CATEGORIES") == null ? "[No Categories]" : propertyMap.get("CATEGORIES").getValue(), 
-								start, end);
+		return end;
+	}
+
+	/**
+	 * Parse properties to get start Date (java.util) from DTSTART.
+	 * @param property
+	 * @return
+	 * @throws ParseException
+	 */
+	private Date getEventStartDate(Property property)
+			throws ParseException
+	{
+		Date start = null;
+		// try using datetime first to get necessary precision. if it throws a ParseException, 
+		// it's probably because it's an all day event so try again using date instead of datetime.
+		try { start = new Date( (new net.fortuna.ical4j.model.DateTime(property.getValue())).getTime() ); }
+		catch (ParseException e) {
+			start = new Date( (new net.fortuna.ical4j.model.Date(property.getValue())).getTime() );
+		}
+		return start;
+	}
+	
+	private boolean isNewEvent(String uid) 							{ return !(_user.getLastModifiedMap().containsKey(uid)); }
+	private void putModifiedDate(String uid, Date eventHashDate) 	{ _user.getLastModifiedMap().put(uid, eventHashDate); }
+	private Date getModifiedDate(String uid) 						{ return _user.getLastModifiedMap().get(uid); }
+	
+	private boolean isEventModified(Date lastModified, String uid)
+	{
+		return getModifiedDate(uid).compareTo(lastModified) < 0;
 	}
 }
