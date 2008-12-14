@@ -22,5 +22,6 @@
 	<classpathentry kind="lib" path="lib/jain-sip-ri-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/JainSipApi1.2.jar"/>
 	<classpathentry kind="lib" path="lib/JainSipRi1.2.jar"/>
+	<classpathentry kind="lib" path="lib/log4j.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

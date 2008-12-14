@@ -11,7 +11,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.logging.Level;
+
 
 import com.sun.corba.se.pept.encoding.OutputObject;
 
@@ -111,7 +113,7 @@ public class GatewayUser implements Serializable
 		if (modifiedProp == null)
 		{
 			System.err.println("Could not get last-modified property from calendar event. That means it's brand new? adding it.");
-			return true;
+			return false;
 		}
 		
 		net.fortuna.ical4j.model.Date eventModifiedDate = new net.fortuna.ical4j.model.Date(modifiedProp.getValue());
@@ -125,6 +127,11 @@ public class GatewayUser implements Serializable
 			shouldSend = true;
 			updateForEvent(lastModified, uid);
 		}
+		
+		if (shouldSend)
+			Logger.getLogger(getClass().getName()).log(Level.FINE, "DOING SEND for SIP message uid: " + uid);
+		else
+			Logger.getLogger(getClass().getName()).log(Level.FINE, "not sending SIP message for uid: " + uid);
 		
 		return shouldSend;
 	}

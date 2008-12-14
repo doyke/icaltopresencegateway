@@ -34,7 +34,9 @@ public class GatewayThread extends Thread
 	{
 		this._gatewayUsers = list;
 		this._logger = Logger.getLogger(getClass().getName());
-		_execService = Executors.newFixedThreadPool(ServerParameters.THREAD_POOL_SIZE);
+		
+		if (ServerParameters.doThreadPooling())
+			_execService = Executors.newFixedThreadPool(ServerParameters.THREAD_POOL_SIZE);
 	}
 	
 	/* (non-Javadoc)
@@ -51,11 +53,30 @@ public class GatewayThread extends Thread
 		 * 3.) AT ANY TIME, REGISTRATION THREAD CAN ADD REGISTERED USERS TO MY LIST.
 		 */
 		
-		for (Iterator<GatewayUser> iter = _gatewayUsers.iterator(); iter.hasNext(); )
-			_execService.execute(new GatewayDispatch(iter.next()));
-		
-		try { Thread.sleep(ServerParameters.POLL_INTERVAL); }
-		catch (InterruptedException e) { _logger.log(Level.SEVERE, "Interrupted exception caught", e); }
+		while (true)
+		{
+			for (Iterator<GatewayUser> iter = _gatewayUsers.iterator(); iter.hasNext(); )
+			{
+				GatewayUser user = iter.next();
+				if (ServerParameters.doThreadPooling())
+				{
+					_logger.log(Level.INFO, "Launching another thread from pool for user: " + user.getPrimaryKey());
+					_execService.execute(new GatewayDispatch(user));
+				}
+				else
+				{
+					_logger.log(Level.INFO, "Launching thread for user: " + user.getPrimaryKey());
+					Thread dispatch = new Thread(new GatewayDispatch(user));
+					dispatch.start();
+				}
+			}
+			
+			try { Thread.sleep(ServerParameters.POLL_INTERVAL); }
+			catch (InterruptedException e) { _logger.log(Level.SEVERE, "Interrupted exception caught", e); }
+			
+			_logger.log(Level.INFO, "Finished sleeping for " + (ServerParameters.POLL_INTERVAL / 1000 ) + 
+									" seconds, about to do executeService again.");
+		}
 	}
 
 	public synchronized void addGatewayUser(Collection<GatewayUser> users) 	{ _gatewayUsers.addAll(users); }

@@ -97,6 +97,8 @@ public class ServerParameters {
 		return buffer.toString();
 	}
 	
+	public static boolean doThreadPooling() { return THREAD_POOL_SIZE > 0; }
+	
     /** parameters cannot be instantiated-- just accessed statically/globally */
     private ServerParameters() {}
 }

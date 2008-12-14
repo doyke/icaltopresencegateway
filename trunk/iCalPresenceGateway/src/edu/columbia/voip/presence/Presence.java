@@ -31,13 +31,12 @@ public class Presence {
 
     public static void sendMessage(String userid, String summary, String description,
             String location, String category, Date start, Date end) {
-        Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to calendar event");
+        Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to '" + 
+        												userid + "' with summary " + summary);
         // TODO @Milind, send this calendar event to the presence server for user <user>
         String pidfMsg = createPidf(userid, location, summary, description, start.toString(), end.toString(), category);
         try {
-            
             _sipLayer.sendMessage(userid, "sip:presence@128.59.18.182:5060", pidfMsg);
-            
         } catch (ParseException ex) {
             Logger.getLogger(Presence.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvalidArgumentException ex) {
@@ -45,10 +44,6 @@ public class Presence {
         } catch (SipException ex) {
             Logger.getLogger(Presence.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-
-
-
     }
 
     public static void setSipLayer(SipLayer _sipLayer) {

@@ -47,7 +47,7 @@ public class GatewayDispatch implements Runnable
 	 */
 	public void run()
 	{
-		_logger.log(Level.FINE, 
+		_logger.log(Level.INFO, 
 						"Starting dispatch thread for syncing calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
 
 		// TODO: need to do all syncing here
@@ -81,7 +81,7 @@ public class GatewayDispatch implements Runnable
 				_logger.log(Level.SEVERE, "caught ParseException while checking if presence needs updating", e);
 			}
 		}
-		_logger.log(Level.FINE, "Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
+		_logger.log(Level.INFO, "Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
 	}
 
 	private void dumpEvent(Calendar event)
@@ -118,14 +118,20 @@ public class GatewayDispatch implements Runnable
 		propertyMap.put("DTEND", 			component.getProperty("DTEND"));
 		
 		start = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTSTART").getValue())).getTime() );
-		end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
+		if (propertyMap.get("DTEND") != null)
+			end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
+		else
+		{
+			_logger.log(Level.WARNING, "Calendar event does not have a DTEND property; hardcoding to 30 minutes past start.");
+			end = new Date( start.getTime() + (1000 * 60 * 30));
+		}
 		
 		// Send SIP presence message
 		Presence.sendMessage(	_user.getPrimaryKey(),
-								propertyMap.get("SUMMARY").getValue(), 
-								propertyMap.get("DESCRIPTION").getValue(), 
-								propertyMap.get("LOCATION").getValue(), 
-								propertyMap.get("CATEGORIES").getValue(), 
+								propertyMap.get("SUMMARY") == null ? "[No Summary]" : propertyMap.get("SUMMARY").getValue(), 
+								propertyMap.get("DESCRIPTION") == null ? "[No Description]" : propertyMap.get("DESCRIPTION").getValue(),  
+								propertyMap.get("LOCATION") == null ? "[No Location]" : propertyMap.get("LOCATION").getValue(), 
+								propertyMap.get("CATEGORIES") == null ? "[No Categories]" : propertyMap.get("CATEGORIES").getValue(), 
 								start, end);
 	}
 }

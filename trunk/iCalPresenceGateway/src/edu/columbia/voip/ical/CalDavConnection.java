@@ -1,5 +1,6 @@
 package edu.columbia.voip.ical;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -14,7 +15,7 @@ import net.fortuna.ical4j.connector.dav.CalDavCalendarCollection;
 import net.fortuna.ical4j.connector.dav.CalDavCalendarStore;
 import net.fortuna.ical4j.model.Calendar;
 
-public class CalDavConnection 
+public class CalDavConnection implements Serializable
 {
 	private static final String PRODID = "-//Columbia Univ//iCal4j Connector 1.1//EN";
 	
