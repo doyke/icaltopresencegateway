@@ -119,9 +119,21 @@ public class GatewayDispatch implements Runnable
 		propertyMap.put("DTEND", 			component.getProperty("DTEND"));
 		propertyMap.put("DURATION",			component.getProperty("DURATION"));
 		
-		start = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTSTART").getValue())).getTime() );
+		// try using datetime first to get necessary precision. if it throws a ParseException, 
+		// it's probably because it's an all day event so try again using date instead of datetime.
+		try { start = new Date( (new net.fortuna.ical4j.model.DateTime(propertyMap.get("DTSTART").getValue())).getTime() ); }
+		catch (ParseException e) {
+			start = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTSTART").getValue())).getTime() );
+		}
+		
+		// same thing as above note-- try using datetime first, then use date if necessary. 
 		if (propertyMap.get("DTEND") != null)
-			end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
+		{
+			try { end = new Date( (new net.fortuna.ical4j.model.DateTime(propertyMap.get("DTEND").getValue())).getTime() ); }
+			catch (ParseException e) {
+				end = new Date( (new net.fortuna.ical4j.model.Date(propertyMap.get("DTEND").getValue())).getTime() );
+			}
+		}
 		else if (propertyMap.get("DURATION") != null)
 		{
 			_logger.log(Level.WARNING, "Calendar event does not have a DTEND property; using duration instead.");
