@@ -57,7 +57,27 @@ public class GatewayUser implements Serializable
 	 * @return the _calendarAccount
 	 */
 	public CalendarAccount getCalendarAccount() { return _calendarAccount; }
-
+	
+	/**
+	 * Map for keeping track of my events and their last modified date;
+	 * don't want to repeatedly send the same event to the presence server.
+	 * Events sent to presence server if modified since last-modified or if
+	 * never seen before.
+	 * 
+	 * String - UID of event
+	 * Date - java.util.Date representing last-modified date and time
+	 * 
+	 * @return Hashtable of last-modified dates for event of user.
+	 */
+	public Map<String, Date> getLastModifiedMap() 	{ return _lastModifiedMap; }
+	
+	/**
+	 * Getting for gateway registration primary Key
+	 * @return primary key of this user
+	 */
+	public String getPrimaryKey() 					{ return _primaryKey; }
+	
+	
 	private GatewayUser(String user, char[] pass, String host, String uri, int port, boolean ssl)
 	{
 		this._lastModifiedMap = new HashMap<String, Date>();
@@ -77,12 +97,14 @@ public class GatewayUser implements Serializable
 		this._caldavConn = CalDavConnection.createConnection(_calendarAccount);
 	}
 	
-//	private static GatewayUser createUser(String user, char[] pass, String host, String uri, int port, boolean ssl)
-//	{
-//		GatewayUser newUser = new GatewayUser(user, pass, host, uri, port, ssl);
-//		return newUser;
-//	}
-
+	/**
+	 * Creates a new GatewayUser with the given registration DB primary key, iCalendarAccount, and JabberAccount
+	 * (Jabber not currently implemented) 
+	 * @param primaryKey
+	 * @param calAccount
+	 * @param jabAccount
+	 * @return new GatewayUser
+	 */
 	public static GatewayUser createUser(String primaryKey, CalendarAccount calAccount, JabberAccount jabAccount)
 	{
 		GatewayUser newUser = new GatewayUser(primaryKey, calAccount, jabAccount);
@@ -98,68 +120,56 @@ public class GatewayUser implements Serializable
 	 */
 	public boolean sendEventToPresence(Calendar event) throws ObjectNotFoundException, ParseException
 	{
-		boolean shouldSend = false;
 		// TODO: Create a new exception in the event that I can't determine if we should
 		// 		 pass this calendar event to presence or not.
+		boolean shouldSend = false;
+		String eventHashUid = null;
+		
 		Component component = event.getComponent("VEVENT");
 		if (component == null)
 			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
 		
-		Property modifiedProp 	= component.getProperty("LAST-MODIFIED");
-		Property uidProp 		= component.getProperty("UID");
+		Property propModified 	= component.getProperty("LAST-MODIFIED");
+		Property propUid 		= component.getProperty("UID");
+		Property propCreated	= component.getProperty("CREATED");
+		Property propStamp		= component.getProperty("DTSTAMP");
 		
-		if (uidProp == null)
+		if (propUid == null)
 			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
-		if (modifiedProp == null)
-		{
-			System.err.println("Could not get last-modified property from calendar event. That means it's brand new? adding it.");
-			return false;
-		}
+		if (propModified == null && propCreated == null && propStamp == null)
+			throw new ObjectNotFoundException("Could not get any time property from calendar event?");
 		
-		net.fortuna.ical4j.model.Date eventModifiedDate = new net.fortuna.ical4j.model.Date(modifiedProp.getValue());
-		long lastModified = eventModifiedDate.getTime();
-		String uid = uidProp.getValue();
+		// need to use DateTime to get necessary time precision
+		net.fortuna.ical4j.model.DateTime eventHashDate = null;
+		eventHashUid = propUid.getValue();
 		
-		if (isNewEvent(uid) ||					// either first time we're seeing this event, OR 
-			isEventModified(lastModified, uid))	// event was updated since we last saw it.
+		// first consider last-modified date, then created date, then finally timestamp date
+		if (propModified != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
+		else if (propCreated != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
+		else if (propStamp != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
+		
+		if (isNewEvent(eventHashUid) ||						// either first time we're seeing this event, OR 
+			isEventModified(eventHashDate, eventHashUid))	// event was updated since we last saw it.
 		{
 			// indicate that we need to update presence with this calendar event.
 			shouldSend = true;
-			updateForEvent(lastModified, uid);
+			putModifiedDate(eventHashUid, eventHashDate);
 		}
 		
-		if (shouldSend)
-			Logger.getLogger(getClass().getName()).log(Level.FINE, "DOING SEND for SIP message uid: " + uid);
-		else
-			Logger.getLogger(getClass().getName()).log(Level.FINE, "not sending SIP message for uid: " + uid);
+		Logger.getLogger(getClass().getName()).log(Level.FINE, (shouldSend ? "" : "NOT ") + "doing send for SIP message uid: " + eventHashUid);
 		
 		return shouldSend;
 	}
 
-	/**
-	 * Map for keeping track of my events and their last modified date;
-	 * don't want to repeatedly send the same event to the presence server.
-	 * Events sent to presence server if modified since last-modified or if
-	 * never seen before.
-	 * 
-	 * String - UID of event
-	 * Date - java.util.Date representing last-modified date
-	 * 
-	 * @return Hashtable of last-modified dates for event of user.
-	 */
-	public Map<String, Date> getLastModifiedMap() { return _lastModifiedMap; }
-	
 	private boolean isNewEvent(String uid) 			{ return !(_lastModifiedMap.containsKey(uid)); }
-	private long getModifiedTime(String uid) 		{ return _lastModifiedMap.get(uid).getTime(); }
-	public String getPrimaryKey() 					{ return _primaryKey; }
+	private Date getModifiedDate(String uid) 		{ return _lastModifiedMap.get(uid); }
+	private void putModifiedDate(String uid, Date eventHashDate) { _lastModifiedMap.put(uid, eventHashDate); }
 	
-	private boolean isEventModified(long lastModified, String uid)
+	private boolean isEventModified(Date lastModified, String uid)
 	{
-		return getModifiedTime(uid) < lastModified;
-	}
-
-	private void updateForEvent(long lastModifiedFromCalendar, String uid)
-	{
-		_lastModifiedMap.put(uid, new Date(lastModifiedFromCalendar));
+		return getModifiedDate(uid).compareTo(lastModified) < 0;
 	}
 }

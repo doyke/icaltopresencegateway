@@ -60,12 +60,12 @@ public class GatewayThread extends Thread
 				GatewayUser user = iter.next();
 				if (ServerParameters.doThreadPooling())
 				{
-					_logger.log(Level.INFO, "Launching another thread from pool for user: " + user.getPrimaryKey());
+					//_logger.log(Level.INFO, "Launching another thread from pool for user: " + user.getPrimaryKey());
 					_execService.execute(new GatewayDispatch(user));
 				}
 				else
 				{
-					_logger.log(Level.INFO, "Launching thread for user: " + user.getPrimaryKey());
+					//_logger.log(Level.INFO, "Launching thread for user: " + user.getPrimaryKey());
 					Thread dispatch = new Thread(new GatewayDispatch(user));
 					dispatch.start();
 				}
