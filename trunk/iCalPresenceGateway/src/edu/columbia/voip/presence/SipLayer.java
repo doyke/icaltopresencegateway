@@ -196,6 +196,7 @@ public class SipLayer implements SipListener {
 	if ((status >= 200) && (status < 300)) { //Success!
 	    //messageProcessor.processInfo("--Sent");
         //    System.out.println("--Sent");
+            System.out.println("SIP Message sent successfully");
 	    return;
 	}
 
