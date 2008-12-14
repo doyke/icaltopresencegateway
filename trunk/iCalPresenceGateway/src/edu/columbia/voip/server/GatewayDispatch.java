@@ -4,6 +4,8 @@
 package edu.columbia.voip.server;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,6 +55,8 @@ public class GatewayDispatch implements Runnable
 
 		// TODO: need to do all syncing here
 		List<Calendar> myEvents = null;
+		List<Calendar> myActiveEvents = new ArrayList<Calendar>();
+		
 		try { myEvents = _user.getCaldavConn().getCalendars(); } 
 		catch (NoCalendarEventsException e) { 
 			_logger.log(Level.WARNING, "calendar user '" + _user.getCalendarAccount().getUsername() + "' has no events. We're done here.");
@@ -74,29 +78,102 @@ public class GatewayDispatch implements Runnable
 			dumpEvent(event);
 			
 			try {
-				if (isCurrentEvent(event))
-				{
-					if (isEventNewOrModified(event))
-						parseAndSend(event);
-				}
-				else
-				{
-					// if any events are in my hashtable then those events have now
-					// ended. send a available presence message.
-					if (!_user.getLastModifiedMap().isEmpty())
-					{
-						Presence.sendAvailableMessage(_user.getPrimaryKey());
-						_user.getLastModifiedMap().clear();
-					}
-					
-				}
+				if (isEventInProgress(event))
+					myActiveEvents.add(event);
 			} catch (ObjectNotFoundException e) { 
 				_logger.log(Level.SEVERE, "caught ObjectNotFoundException while checking if presence needs updating", e);
 			} catch (ParseException e) {
 				_logger.log(Level.SEVERE, "caught ParseException while checking if presence needs updating", e);
 			}
 		}
+		
+		if (myActiveEvents.isEmpty())
+		{
+			// if any events are in my hashtable then those events have now
+			// ended. send a available presence message.
+			if (_user.getLastModifiedMap().isEmpty())
+			{
+				_logger.log(Level.INFO, "Sending Available presence message");
+				Presence.sendAvailableMessage(_user.getPrimaryKey());
+				_user.getLastModifiedMap().clear();
+				_user.getPreviousActiveEvents().clear();
+			}
+		}
+		else
+		{
+			if (isChangeFrom(myActiveEvents))
+			{
+				try {
+					syncChangedLists(myActiveEvents);
+				} catch (ObjectNotFoundException e) {
+					_logger.log(Level.SEVERE, "caught ObjectNotFoundException while syncing event state", e);
+				} catch (ParseException e) {
+					_logger.log(Level.SEVERE, "caught ParseException while syncing event state", e);
+				}
+				
+				String summaries = "WOULD HAVE SENT THE FOLLOWING EVENTS:\n";
+				for (Calendar event : myActiveEvents)
+				{
+					Component component = event.getComponent(Component.VEVENT);
+					summaries += component.getProperty(Property.SUMMARY) + "\n";
+				}
+				System.out.println(summaries);
+				//parseAndSend(myActiveEvents);
+			}
+		}
+		
 		_logger.log(Level.INFO, "Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
+	}
+
+	private void syncChangedLists(List<Calendar> myActiveEvents) throws ObjectNotFoundException, ParseException
+	{
+		_user.getPreviousActiveEvents().clear();
+		_user.getPreviousActiveEvents().addAll(myActiveEvents);
+		
+		_user.getLastModifiedMap().clear();
+		for (Calendar event : myActiveEvents)
+		{
+			String eventHashUid = null;
+			Component component = event.getComponent(Component.VEVENT);
+			
+			Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
+			Property propUid 		= component.getProperty(Property.UID);
+			Property propCreated	= component.getProperty(Property.CREATED);
+			Property propStamp		= component.getProperty(Property.DTSTAMP);
+			
+			if (propUid == null)
+				throw new ObjectNotFoundException("Could not get uid property from calendar event?");
+			if (propModified == null && propCreated == null && propStamp == null)
+				throw new ObjectNotFoundException("Could not get any time property from calendar event?");
+			
+			// need to use DateTime to get necessary time precision
+			net.fortuna.ical4j.model.DateTime eventHashDate = null;
+			eventHashUid = propUid.getValue();
+			
+			// first consider last-modified date, then created date, then finally timestamp date
+			if (propModified != null)
+				eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
+			else if (propCreated != null)
+				eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
+			else if (propStamp != null)
+				eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
+			
+			putModifiedDate(eventHashUid, eventHashDate);
+		}
+	}
+
+	private boolean isChangeFrom(List<Calendar> myActiveEvents)
+	{
+		if (myActiveEvents.size() != _user.getPreviousActiveEvents().size())
+			return true;
+		
+		Collection<Calendar> previousList = _user.getPreviousActiveEvents();
+		
+		// essentially doing a list1.equals(list2) by *value* instead of by reference.
+		if (previousList.containsAll(myActiveEvents) && myActiveEvents.containsAll(previousList))
+			return false; // the two lists have all the exact same elements.
+		else
+			return true;
 	}
 
 	private void dumpEvent(Calendar event)
@@ -114,7 +191,7 @@ public class GatewayDispatch implements Runnable
         }
 	}
 	
-	private boolean isCurrentEvent(Calendar event) throws ParseException, ObjectNotFoundException
+	private boolean isEventInProgress(Calendar event) throws ParseException, ObjectNotFoundException
 	{
 		Component component = event.getComponent(Component.VEVENT);
 		Date start = getEventStartDate(component.getProperty(Property.DTSTART));
@@ -122,12 +199,12 @@ public class GatewayDispatch implements Runnable
 		
 		if (isEventActive(start, end))
 		{
-			_logger.log(Level.INFO, "Event '" + component.getProperty(Property.SUMMARY).getValue() + "' IS currently happening. SENDING presence.");
+			_logger.log(Level.INFO, "Event '" + component.getProperty(Property.SUMMARY).getValue() + "' IS currently happening.");
 			return true;
 		}
 		else
 		{
-			_logger.log(Level.INFO, "Event '" + component.getProperty(Property.SUMMARY).getValue() + "' is not currently happening. Not sending presence.");
+			_logger.log(Level.INFO, "Event '" + component.getProperty(Property.SUMMARY).getValue() + "' is not currently happening.");
 			return false;
 		}
 	}
@@ -140,51 +217,51 @@ public class GatewayDispatch implements Runnable
 	 * @throws ObjectNotFoundException
 	 * @throws ParseException
 	 */
-	private boolean isEventNewOrModified(Calendar event) throws ObjectNotFoundException, ParseException
-	{
-		// TODO: Create a new exception in the event that I can't determine if we should
-		// 		 pass this calendar event to presence or not.
-		boolean shouldSend = false;
-		String eventHashUid = null;
-		
-		Component component = event.getComponent(Component.VEVENT);
-		if (component == null)
-			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
-		
-		Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
-		Property propUid 		= component.getProperty(Property.UID);
-		Property propCreated	= component.getProperty(Property.CREATED);
-		Property propStamp		= component.getProperty(Property.DTSTAMP);
-		
-		if (propUid == null)
-			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
-		if (propModified == null && propCreated == null && propStamp == null)
-			throw new ObjectNotFoundException("Could not get any time property from calendar event?");
-		
-		// need to use DateTime to get necessary time precision
-		net.fortuna.ical4j.model.DateTime eventHashDate = null;
-		eventHashUid = propUid.getValue();
-		
-		// first consider last-modified date, then created date, then finally timestamp date
-		if (propModified != null)
-			eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
-		else if (propCreated != null)
-			eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
-		else if (propStamp != null)
-			eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
-		
-		if (isNewEvent(eventHashUid) ||						// either first time we're seeing this event, OR 
-			isEventModified(eventHashDate, eventHashUid))	// event was updated since we last saw it.
-		{
-			// indicate that we need to update presence with this calendar event.
-			shouldSend = true;
-			putModifiedDate(eventHashUid, eventHashDate);
-		}
-		
-		Logger.getLogger(getClass().getName()).log(Level.FINE, (shouldSend ? "" : "NOT ") + "doing send for SIP message uid: " + eventHashUid);
-		
-		return shouldSend;
-	}
+//	private boolean isEventNewOrModified(Calendar event) throws ObjectNotFoundException, ParseException
+//	{
+//		// TODO: Create a new exception in the event that I can't determine if we should
+//		// 		 pass this calendar event to presence or not.
+//		boolean shouldSend = false;
+//		String eventHashUid = null;
+//		
+//		Component component = event.getComponent(Component.VEVENT);
+//		if (component == null)
+//			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
+//		
+//		Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
+//		Property propUid 		= component.getProperty(Property.UID);
+//		Property propCreated	= component.getProperty(Property.CREATED);
+//		Property propStamp		= component.getProperty(Property.DTSTAMP);
+//		
+//		if (propUid == null)
+//			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
+//		if (propModified == null && propCreated == null && propStamp == null)
+//			throw new ObjectNotFoundException("Could not get any time property from calendar event?");
+//		
+//		// need to use DateTime to get necessary time precision
+//		net.fortuna.ical4j.model.DateTime eventHashDate = null;
+//		eventHashUid = propUid.getValue();
+//		
+//		// first consider last-modified date, then created date, then finally timestamp date
+//		if (propModified != null)
+//			eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
+//		else if (propCreated != null)
+//			eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
+//		else if (propStamp != null)
+//			eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
+//		
+//		if (isNewEvent(eventHashUid) ||						// either first time we're seeing this event, OR 
+//			isEventModified(eventHashDate, eventHashUid))	// event was updated since we last saw it.
+//		{
+//			// indicate that we need to update presence with this calendar event.
+//			shouldSend = true;
+//			putModifiedDate(eventHashUid, eventHashDate);
+//		}
+//		
+//		Logger.getLogger(getClass().getName()).log(Level.FINE, (shouldSend ? "" : "NOT ") + "doing send for SIP message uid: " + eventHashUid);
+//		
+//		return shouldSend;
+//	}
 	
 	private boolean isEventActive(Date start, Date end)
 	{
