@@ -7,9 +7,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -38,6 +40,8 @@ public class GatewayUser implements Serializable
 	private JabberAccount _jabberAccount = null;
 	
 	private CalendarAccount _calendarAccount = null;
+	
+	private List<Calendar> _previousActiveEvents = null; 
 	
 	private Map<String, Date> _lastModifiedMap = null;
 
@@ -72,25 +76,37 @@ public class GatewayUser implements Serializable
 	public Map<String, Date> getLastModifiedMap() 	{ return _lastModifiedMap; }
 	
 	/**
+	 * Map for keeping track of my previous active events for syncing my current status with
+	 * the presence server.
+	 * 
+	 * String - UID of event
+	 * Calendar - Calendar event for this UID
+	 * 
+	 * @return Hashtable of active Calendar events from last round.
+	 */
+	public List<Calendar> getPreviousActiveEvents() 	{ return _previousActiveEvents; }
+	
+	/**
 	 * Getting for gateway registration primary Key
 	 * @return primary key of this user
 	 */
 	public String getPrimaryKey() 					{ return _primaryKey; }
 	
 	
-	private GatewayUser(String user, char[] pass, String host, String uri, int port, boolean ssl)
-	{
-		this._lastModifiedMap = new HashMap<String, Date>();
-		this._calendarAccount = new CalendarAccount(user, pass, host, uri, port, ssl);
-		
-		// TODO: dropping Jabber support
-		this._jabberAccount = null;//new JabberAccount(user, pass, host);
-		this._caldavConn = CalDavConnection.createConnection(_calendarAccount);
-	}
+//	private GatewayUser(String user, char[] pass, String host, String uri, int port, boolean ssl)
+//	{
+//		this._lastModifiedMap = new HashMap<String, Date>();
+//		this._calendarAccount = new CalendarAccount(user, pass, host, uri, port, ssl);
+//		
+//		// TODO: dropping Jabber support
+//		this._jabberAccount = null;//new JabberAccount(user, pass, host);
+//		this._caldavConn = CalDavConnection.createConnection(_calendarAccount);
+//	}
 	
 	private GatewayUser(String primaryKey, CalendarAccount calAccount, JabberAccount jabAccount)
 	{
 		this._lastModifiedMap = new HashMap<String, Date>();
+		this._previousActiveEvents = new ArrayList<Calendar>();
 		this._primaryKey = primaryKey;
 		this._calendarAccount = calAccount;
 		this._jabberAccount = jabAccount;
