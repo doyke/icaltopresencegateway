@@ -56,4 +56,10 @@ public class Presence {
         
         return pidf;
     }
+
+	public static void sendAvailableMessage(String primaryKey)
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }

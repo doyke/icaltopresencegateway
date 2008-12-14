@@ -75,8 +75,21 @@ public class GatewayDispatch implements Runnable
 			
 			try {
 				if (isCurrentEvent(event))
+				{
 					if (isEventNewOrModified(event))
 						parseAndSend(event);
+				}
+				else
+				{
+					// if any events are in my hashtable then those events have now
+					// ended. send a available presence message.
+					if (!_user.getLastModifiedMap().isEmpty())
+					{
+						Presence.sendAvailableMessage(_user.getPrimaryKey());
+						_user.getLastModifiedMap().clear();
+					}
+					
+				}
 			} catch (ObjectNotFoundException e) { 
 				_logger.log(Level.SEVERE, "caught ObjectNotFoundException while checking if presence needs updating", e);
 			} catch (ParseException e) {
