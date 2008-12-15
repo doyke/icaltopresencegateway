@@ -57,30 +57,30 @@ public class Presence {
 
         String cumulativeTuple;
 
-        String tuplePidf = "<tuple id =\"" + random + "\">";
-        String statusPidf = "<status><basic>closed</basic>";
-        String activityPidf = "<cal:activity>";
-        String summaryPidf = "<cal:summary>" + summary + "</cal:summary>";
+        String tuplePidf = "<tuple id =\"" + random + "\">\n";
+        String statusPidf = "<status>\n<basic>closed</basic>\n";
+        String activityPidf = "<cal:activity>\n";
+        String summaryPidf = "<cal:summary>" + summary + "</cal:summary>\n";
         cumulativeTuple = tuplePidf + statusPidf + activityPidf + summaryPidf;
         if (!description.equalsIgnoreCase("[no description]")) {
-            String descriptionPidf = "<cal:description>" + description + "</cal:description>";
+            String descriptionPidf = "<cal:description>" + description + "</cal:description>\n";
             cumulativeTuple = cumulativeTuple + descriptionPidf;
         }
         if (!location.equalsIgnoreCase("[no location]")) {
-            String locationPidf = "<cal:location>" + location + "</cal:location>";
+            String locationPidf = "<cal:location>" + location + "</cal:location>\n";
             cumulativeTuple = cumulativeTuple + locationPidf;
         }
-        String startDatePidf = "<cal:startdate>" + startDate + "</cal:startdate>";
+        String startDatePidf = "<cal:startdate>" + startDate + "</cal:startdate>\n";
         cumulativeTuple = cumulativeTuple + startDatePidf;
-        String endDatePidf = "<cal:enddate>" + endDate + "</cal:enddate>";
+        String endDatePidf = "<cal:enddate>" + endDate + "</cal:enddate>\n";
         cumulativeTuple = cumulativeTuple + endDatePidf;
         if (!category.equalsIgnoreCase("[no categories]")) {
-            String categoryPidf = "<cal:category>" + category + "</cal:category>";
+            String categoryPidf = "<cal:category>" + category + "</cal:category>\n";
             cumulativeTuple = cumulativeTuple + categoryPidf;
         }
-        String activityclosePidf = "</cal:activity>";
-        String statusclosePidf = "</status>";
-        String tupleclosePidf = "</tuple>";
+        String activityclosePidf = "</cal:activity>\n";
+        String statusclosePidf = "</status>\n";
+        String tupleclosePidf = "</tuple>\n";
         cumulativeTuple = cumulativeTuple + activityclosePidf + statusclosePidf + tupleclosePidf;
 
         return cumulativeTuple;
@@ -91,8 +91,8 @@ public class Presence {
         String presencePidf = null;
 
 
-        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
-        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">";
+        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
+        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">\n";
         String endPidf = "</presence>";
 
         presencePidf =  headerPidf + entityPidf;
@@ -101,15 +101,16 @@ public class Presence {
         int r = generator.nextInt();
         String random = Integer.toString(r);
         
-        String tuplePidf = "<tuple id =\"" + random + "\">";
-        String statusPidf = "<status><basic>closed</basic>";
-        String activityPidf = "<cal:activity>";
-        String summaryPidf = "<cal:summary>Available</cal:summary>";
-        String activityclosePidf = "</cal:activity>";
-        String statusclosePidf = "</status>";
-        String tupleclosePidf = "</tuple>";
+        String tuplePidf = "<tuple id =\"" + random + "\">\n";
+        String statusPidf = "<status>\n<basic>closed</basic>\n";
+        String activityPidf = "<cal:activity>\n";
+        String summaryPidf = "<cal:summary>Available</cal:summary>\n";
+        String activityclosePidf = "</cal:activity>\n";
+        String statusclosePidf = "</status>\n";
+        String tupleclosePidf = "</tuple>\n";
         
-        presencePidf = presencePidf + tuplePidf + statusPidf + activityPidf + summaryPidf + activityclosePidf + statusclosePidf + tupleclosePidf + endPidf;
+        presencePidf = 	presencePidf + tuplePidf + statusPidf + activityPidf + summaryPidf + 
+        				activityclosePidf + statusclosePidf + tupleclosePidf + endPidf;
         
         sendMessage(primaryKey, presencePidf);     
     }
@@ -123,8 +124,8 @@ public class Presence {
         String presencePidf = null;
 
 
-        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
-        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">";
+        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
+        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">\n";
         String endPidf = "</presence>";
 
         presencePidf = headerPidf + entityPidf;

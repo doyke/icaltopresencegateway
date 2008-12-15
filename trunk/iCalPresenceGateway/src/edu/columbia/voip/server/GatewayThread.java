@@ -34,6 +34,8 @@ public class GatewayThread extends Thread
 	
 	private Logger _logger = null;
 	
+	private final long THREAD_STAGGER = 400;
+	
 
 	public GatewayThread(List<GatewayUser> list, SipLayer _sipLayer)
 	{
@@ -67,11 +69,15 @@ public class GatewayThread extends Thread
 				if (ServerParameters.doThreadPooling())
 				{
 					_logger.log(Level.FINE, "Launching another thread from pool for user: " + user.getPrimaryKey());
+					try { Thread.sleep(THREAD_STAGGER); }
+					catch (InterruptedException e) {}
 					_execService.execute(new GatewayDispatch(user, new Presence(_sipLayer)));
 				}
 				else
 				{
 					_logger.log(Level.FINE, "Launching thread for user: " + user.getPrimaryKey());
+					try { Thread.sleep(THREAD_STAGGER); }
+					catch (InterruptedException e) {}
 					Thread dispatch = new Thread(new GatewayDispatch(user, new Presence(_sipLayer)));
 					dispatch.start();
 				}
@@ -85,7 +91,6 @@ public class GatewayThread extends Thread
 		}
 	}
 
-	public synchronized void addGatewayUser(Collection<GatewayUser> users) 	{ _gatewayUsers.addAll(users); }
 	public synchronized void addGatewayUser(GatewayUser user) 				{ _gatewayUsers.add(user); }
 	public List<GatewayUser> getGatewayUsers() 								{ return _gatewayUsers; }
 }
