@@ -10,6 +10,7 @@ package edu.columbia.voip.presence;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +30,7 @@ public class Presence {
     private Presence() {
     }
 
+    @Deprecated
     public static void sendMessage(String userid, String summary, String description,
             String location, String category, Date start, Date end) {
         Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to '" + 
@@ -61,5 +63,14 @@ public class Presence {
 	{
 		// TODO Auto-generated method stub
 		
+	}
+
+	public static void sendMessage(String primaryKey,
+			List<PresenceCalendar> presenseCalendars)
+	{
+		// TODO Auto-generated method stub
+		Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send " + presenseCalendars.size() + 
+										" SIP presence messages to '" + primaryKey + "'");
+
 	}
 }

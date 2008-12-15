@@ -3,6 +3,7 @@
  */
 package edu.columbia.voip.server;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +24,7 @@ import net.fortuna.ical4j.model.Property;
 
 import edu.columbia.voip.ical.NoCalendarEventsException;
 import edu.columbia.voip.presence.Presence;
+import edu.columbia.voip.presence.PresenceCalendar;
 import edu.columbia.voip.user.GatewayUser;
 
 /**
@@ -87,6 +89,12 @@ public class GatewayDispatch implements Runnable
 			}
 		}
 		
+		processCalendarEvents(myActiveEvents);
+		_logger.log(Level.INFO, "Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
+	}
+
+	private void processCalendarEvents(List<Calendar> myActiveEvents)
+	{
 		if (myActiveEvents.isEmpty())
 		{
 			// if any events are in my hashtable then those events have now
@@ -105,24 +113,23 @@ public class GatewayDispatch implements Runnable
 			{
 				try {
 					syncChangedLists(myActiveEvents);
+					
+					StringBuffer summaryBuf = new StringBuffer("Sending the following calendar events:\n");
+					for (Calendar event : myActiveEvents)
+					{
+						Component component = event.getComponent(Component.VEVENT);
+						summaryBuf.append(component.getProperty(Property.SUMMARY).getValue() + "\n");
+					}
+					_logger.log(Level.INFO, summaryBuf.toString());
+					
+					parseAndSend(myActiveEvents); 
 				} catch (ObjectNotFoundException e) {
 					_logger.log(Level.SEVERE, "caught ObjectNotFoundException while syncing event state", e);
 				} catch (ParseException e) {
 					_logger.log(Level.SEVERE, "caught ParseException while syncing event state", e);
 				}
-				
-				String summaries = "WOULD HAVE SENT THE FOLLOWING EVENTS:\n";
-				for (Calendar event : myActiveEvents)
-				{
-					Component component = event.getComponent(Component.VEVENT);
-					summaries += component.getProperty(Property.SUMMARY) + "\n";
-				}
-				System.out.println(summaries);
-				//parseAndSend(myActiveEvents);
 			}
 		}
-		
-		_logger.log(Level.INFO, "Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
 	}
 
 	private void syncChangedLists(List<Calendar> myActiveEvents) throws ObjectNotFoundException, ParseException
@@ -136,8 +143,9 @@ public class GatewayDispatch implements Runnable
 			String eventHashUid = null;
 			Component component = event.getComponent(Component.VEVENT);
 			
-			Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
 			Property propUid 		= component.getProperty(Property.UID);
+			
+			Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
 			Property propCreated	= component.getProperty(Property.CREATED);
 			Property propStamp		= component.getProperty(Property.DTSTAMP);
 			
@@ -269,35 +277,42 @@ public class GatewayDispatch implements Runnable
 		return (now.after(start) && now.before(end)); 
 	}
 
-	private void parseAndSend(Calendar event) throws ObjectNotFoundException, ParseException
+	private void parseAndSend(List<Calendar> events) throws ObjectNotFoundException, ParseException
 	{
 		Map<String, Property> propertyMap = new HashMap<String, Property>();
 		Date start = null;
 		Date end = null;
+		List<PresenceCalendar> presenseCalendars = new ArrayList<PresenceCalendar>();
 		
-		Component component = event.getComponent("VEVENT");
-		if (component == null)
-			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
-		
-		propertyMap.put(Property.SUMMARY, 			component.getProperty(Property.SUMMARY));
-		propertyMap.put(Property.LAST_MODIFIED, 	component.getProperty(Property.LAST_MODIFIED));
-		propertyMap.put(Property.DESCRIPTION, 		component.getProperty(Property.DESCRIPTION));
-		propertyMap.put(Property.LOCATION, 			component.getProperty(Property.LOCATION));
-		propertyMap.put(Property.CATEGORIES, 		component.getProperty(Property.CATEGORIES));
-		propertyMap.put(Property.DTSTART, 			component.getProperty(Property.DTSTART));
-		propertyMap.put(Property.DTEND, 			component.getProperty(Property.DTEND));
-		propertyMap.put(Property.DURATION,			component.getProperty(Property.DURATION));
-		
-		start = getEventStartDate(propertyMap.get(Property.DTSTART));
-		end = getEventEndDate(propertyMap.get(Property.DTEND), propertyMap.get(Property.DURATION), start);
+		for (Calendar event : events)
+		{
+			Component component = event.getComponent(Component.VEVENT);
+			if (component == null)
+				throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
+			
+			propertyMap.put(Property.SUMMARY, 			component.getProperty(Property.SUMMARY));
+			propertyMap.put(Property.LAST_MODIFIED, 	component.getProperty(Property.LAST_MODIFIED));
+			propertyMap.put(Property.DESCRIPTION, 		component.getProperty(Property.DESCRIPTION));
+			propertyMap.put(Property.LOCATION, 			component.getProperty(Property.LOCATION));
+			propertyMap.put(Property.CATEGORIES, 		component.getProperty(Property.CATEGORIES));
+			propertyMap.put(Property.DTSTART, 			component.getProperty(Property.DTSTART));
+			propertyMap.put(Property.DTEND, 			component.getProperty(Property.DTEND));
+			propertyMap.put(Property.DURATION,			component.getProperty(Property.DURATION));
+			
+			start = getEventStartDate(propertyMap.get(Property.DTSTART));
+			end = getEventEndDate(propertyMap.get(Property.DTEND), propertyMap.get(Property.DURATION), start);
+			
+			presenseCalendars.add(new PresenceCalendar(	propertyMap.get(Property.SUMMARY) == null 		? "[No Summary]" 	: propertyMap.get(Property.SUMMARY).getValue(), 
+														propertyMap.get(Property.DESCRIPTION) == null 	? "[No Description]": propertyMap.get(Property.DESCRIPTION).getValue(),  
+														propertyMap.get(Property.LOCATION) == null 		? "[No Location]" 	: propertyMap.get(Property.LOCATION).getValue(), 
+														propertyMap.get(Property.CATEGORIES) == null 	? "[No Categories]" : propertyMap.get(Property.CATEGORIES).getValue(),
+														DateFormat.getDateTimeInstance().format(start),
+														DateFormat.getDateTimeInstance().format(end)));
+			
+		}
 		
 		// Send SIP presence message
-		Presence.sendMessage(	_user.getPrimaryKey(),
-								propertyMap.get(Property.SUMMARY) == null 		? "[No Summary]" 	: propertyMap.get(Property.SUMMARY).getValue(), 
-								propertyMap.get(Property.DESCRIPTION) == null 	? "[No Description]": propertyMap.get(Property.DESCRIPTION).getValue(),  
-								propertyMap.get(Property.LOCATION) == null 		? "[No Location]" 	: propertyMap.get(Property.LOCATION).getValue(), 
-								propertyMap.get(Property.CATEGORIES) == null 	? "[No Categories]" : propertyMap.get(Property.CATEGORIES).getValue(), 
-								start, end);
+		Presence.sendMessage(_user.getPrimaryKey(), presenseCalendars);
 	}
 
 	/**
