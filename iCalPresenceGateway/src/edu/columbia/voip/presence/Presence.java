@@ -25,16 +25,16 @@ import javax.sip.SipException;
  */
 public class Presence {
 
-    private static SipLayer _sipLayer = null;
+    private SipLayer _sipLayer = null;
 
     /** Cannot be instantiated for now-- only have the one static sendMessage method */
-    private Presence() {
+    public Presence(SipLayer _sipLayer) {
+    	this._sipLayer = _sipLayer;
     }
 
-    @Deprecated
-    public static void sendMessage(String userid, String pidfMsg) {
+    public void sendMessage(String userid, String pidfMsg) {
         Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to '" +
-                userid);
+                userid + "'");
         // TODO @Milind, send this calendar event to the presence server for user <user>
         //String pidfMsg = createPidf(userid, location, summary, description, start.toString(), end.toString(), category);
         try {
@@ -46,10 +46,6 @@ public class Presence {
         } catch (SipException ex) {
             Logger.getLogger(Presence.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    public static void setSipLayer(SipLayer _sipLayer) {
-        Presence._sipLayer = _sipLayer;
     }
 
     private static String createTuple(String summary, String description, String location, String startDate, String endDate, String category) {
@@ -66,11 +62,11 @@ public class Presence {
         String activityPidf = "<cal:activity>";
         String summaryPidf = "<cal:summary>" + summary + "</cal:summary>";
         cumulativeTuple = tuplePidf + statusPidf + activityPidf + summaryPidf;
-        if (!description.equals("[no description")) {
+        if (!description.equalsIgnoreCase("[no description]")) {
             String descriptionPidf = "<cal:description>" + description + "</cal:description>";
             cumulativeTuple = cumulativeTuple + descriptionPidf;
         }
-        if (!location.equals("[no location")) {
+        if (!location.equalsIgnoreCase("[no location]")) {
             String locationPidf = "<cal:location>" + location + "</cal:location>";
             cumulativeTuple = cumulativeTuple + locationPidf;
         }
@@ -78,19 +74,19 @@ public class Presence {
         cumulativeTuple = cumulativeTuple + startDatePidf;
         String endDatePidf = "<cal:enddate>" + endDate + "</cal:enddate>";
         cumulativeTuple = cumulativeTuple + endDatePidf;
-        if (!category.equals("[no category")) {
+        if (!category.equalsIgnoreCase("[no categories]")) {
             String categoryPidf = "<cal:category>" + category + "</cal:category>";
             cumulativeTuple = cumulativeTuple + categoryPidf;
         }
         String activityclosePidf = "</cal:activity>";
-        String statusclosePidf = "</cal:status>";
-        String tupleclosePidf = "</cal:tuple>";
+        String statusclosePidf = "</status>";
+        String tupleclosePidf = "</tuple>";
         cumulativeTuple = cumulativeTuple + activityclosePidf + statusclosePidf + tupleclosePidf;
 
         return cumulativeTuple;
     }
 
-    public static void sendAvailableMessage(String primaryKey) {
+    public void sendAvailableMessage(String primaryKey) {
         // TODO Auto-generated method stub
         String presencePidf = null;
 
@@ -99,7 +95,7 @@ public class Presence {
         String entityPidf = "entity=\"pres:" + primaryKey + "@columbia.edu\">";
         String endPidf = "</presence>";
 
-        presencePidf = presencePidf + headerPidf + entityPidf;
+        presencePidf =  headerPidf + entityPidf;
 
         Random generator = new Random();
         int r = generator.nextInt();
@@ -110,15 +106,15 @@ public class Presence {
         String activityPidf = "<cal:activity>";
         String summaryPidf = "<cal:summary>Available</cal:summary>";
         String activityclosePidf = "</cal:activity>";
-        String statusclosePidf = "</cal:status>";
-        String tupleclosePidf = "</cal:tuple>";
+        String statusclosePidf = "</status>";
+        String tupleclosePidf = "</tuple>";
         
         presencePidf = presencePidf + tuplePidf + statusPidf + activityPidf + summaryPidf + activityclosePidf + statusclosePidf + tupleclosePidf + endPidf;
         
         sendMessage(primaryKey, presencePidf);     
     }
 
-    public static void sendMessage(String primaryKey,
+    public void sendMessage(String primaryKey,
             List<PresenceCalendar> presenseCalendars) {
         // TODO Auto-generated method stub
         Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send " + presenseCalendars.size() +

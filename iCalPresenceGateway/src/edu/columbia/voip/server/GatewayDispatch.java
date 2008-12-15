@@ -38,11 +38,14 @@ public class GatewayDispatch implements Runnable
 	
 	private Logger _logger = null;
 	
+	private Presence _presence = null;
+	
 	/**
 	 * 
 	 */
-	public GatewayDispatch(GatewayUser user)
+	public GatewayDispatch(GatewayUser user, Presence presence)
 	{
+		this._presence = presence;
 		this._logger = Logger.getLogger(getClass().getName());
 		this._user = user;
 	}
@@ -97,15 +100,19 @@ public class GatewayDispatch implements Runnable
 	{
 		if (myActiveEvents.isEmpty())
 		{
+			if (_user.getPreviousActiveEvents().isEmpty())
+			{
+				_logger.log(Level.INFO, "Nothing to do");
+				return;
+			}
+			
 			// if any events are in my hashtable then those events have now
 			// ended. send a available presence message.
-			if (_user.getLastModifiedMap().isEmpty())
-			{
-				_logger.log(Level.INFO, "Sending Available presence message");
-				Presence.sendAvailableMessage(_user.getPrimaryKey());
-				_user.getLastModifiedMap().clear();
-				_user.getPreviousActiveEvents().clear();
-			}
+			_logger.log(Level.INFO, "Sending Available presence message");
+			_presence.sendAvailableMessage(_user.getPrimaryKey());
+			_user.getLastModifiedMap().clear();
+			_user.getPreviousActiveEvents().clear();
+			
 		}
 		else
 		{
@@ -225,51 +232,52 @@ public class GatewayDispatch implements Runnable
 	 * @throws ObjectNotFoundException
 	 * @throws ParseException
 	 */
-//	private boolean isEventNewOrModified(Calendar event) throws ObjectNotFoundException, ParseException
-//	{
-//		// TODO: Create a new exception in the event that I can't determine if we should
-//		// 		 pass this calendar event to presence or not.
-//		boolean shouldSend = false;
-//		String eventHashUid = null;
-//		
-//		Component component = event.getComponent(Component.VEVENT);
-//		if (component == null)
-//			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
-//		
-//		Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
-//		Property propUid 		= component.getProperty(Property.UID);
-//		Property propCreated	= component.getProperty(Property.CREATED);
-//		Property propStamp		= component.getProperty(Property.DTSTAMP);
-//		
-//		if (propUid == null)
-//			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
-//		if (propModified == null && propCreated == null && propStamp == null)
-//			throw new ObjectNotFoundException("Could not get any time property from calendar event?");
-//		
-//		// need to use DateTime to get necessary time precision
-//		net.fortuna.ical4j.model.DateTime eventHashDate = null;
-//		eventHashUid = propUid.getValue();
-//		
-//		// first consider last-modified date, then created date, then finally timestamp date
-//		if (propModified != null)
-//			eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
-//		else if (propCreated != null)
-//			eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
-//		else if (propStamp != null)
-//			eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
-//		
-//		if (isNewEvent(eventHashUid) ||						// either first time we're seeing this event, OR 
-//			isEventModified(eventHashDate, eventHashUid))	// event was updated since we last saw it.
-//		{
-//			// indicate that we need to update presence with this calendar event.
-//			shouldSend = true;
-//			putModifiedDate(eventHashUid, eventHashDate);
-//		}
-//		
-//		Logger.getLogger(getClass().getName()).log(Level.FINE, (shouldSend ? "" : "NOT ") + "doing send for SIP message uid: " + eventHashUid);
-//		
-//		return shouldSend;
-//	}
+	@Deprecated
+	private boolean isEventNewOrModified(Calendar event) throws ObjectNotFoundException, ParseException
+	{
+		// TODO: Create a new exception in the event that I can't determine if we should
+		// 		 pass this calendar event to presence or not.
+		boolean shouldSend = false;
+		String eventHashUid = null;
+		
+		Component component = event.getComponent(Component.VEVENT);
+		if (component == null)
+			throw new ObjectNotFoundException("Could not get VEVENT component from calendar event?");
+		
+		Property propModified 	= component.getProperty(Property.LAST_MODIFIED);
+		Property propUid 		= component.getProperty(Property.UID);
+		Property propCreated	= component.getProperty(Property.CREATED);
+		Property propStamp		= component.getProperty(Property.DTSTAMP);
+		
+		if (propUid == null)
+			throw new ObjectNotFoundException("Could not get uid property from calendar event?");
+		if (propModified == null && propCreated == null && propStamp == null)
+			throw new ObjectNotFoundException("Could not get any time property from calendar event?");
+		
+		// need to use DateTime to get necessary time precision
+		net.fortuna.ical4j.model.DateTime eventHashDate = null;
+		eventHashUid = propUid.getValue();
+		
+		// first consider last-modified date, then created date, then finally timestamp date
+		if (propModified != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propModified.getValue());
+		else if (propCreated != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propCreated.getValue());
+		else if (propStamp != null)
+			eventHashDate = new net.fortuna.ical4j.model.DateTime(propStamp.getValue());
+		
+		if (isNewEvent(eventHashUid) ||						// either first time we're seeing this event, OR 
+			isEventModified(eventHashDate, eventHashUid))	// event was updated since we last saw it.
+		{
+			// indicate that we need to update presence with this calendar event.
+			shouldSend = true;
+			putModifiedDate(eventHashUid, eventHashDate);
+		}
+		
+		Logger.getLogger(getClass().getName()).log(Level.FINE, (shouldSend ? "" : "NOT ") + "doing send for SIP message uid: " + eventHashUid);
+		
+		return shouldSend;
+	}
 	
 	private boolean isEventActive(Date start, Date end)
 	{
@@ -308,11 +316,10 @@ public class GatewayDispatch implements Runnable
 														propertyMap.get(Property.CATEGORIES) == null 	? "[No Categories]" : propertyMap.get(Property.CATEGORIES).getValue(),
 														DateFormat.getDateTimeInstance().format(start),
 														DateFormat.getDateTimeInstance().format(end)));
-			
 		}
 		
 		// Send SIP presence message
-		Presence.sendMessage(_user.getPrimaryKey(), presenseCalendars);
+		_presence.sendMessage(_user.getPrimaryKey(), presenseCalendars);
 	}
 
 	/**
