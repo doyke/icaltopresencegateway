@@ -101,6 +101,11 @@ public class Main
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Loading configurations from gateway.conf...");
 		ConfProcessor.loadConfFile();
 		
+		// connect to DB and get registrations
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "Building MySQL database connection.");
+		_dbConnection = DBEngine.buildConnection();
+		_userList = _dbConnection.getAllRegisteredUsers();
+		
 		// initialized sip stack
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Initializing SIP Layer...");
 		try { _sipLayer = new SipLayer(InetAddress.getLocalHost().getHostAddress(), 5061); }
@@ -110,11 +115,6 @@ public class Main
 		catch (InvalidArgumentException e) 		{ throw new SIPException(e); }
 		catch (TransportNotSupportedException e){ throw new SIPException(e); }
 		catch (PeerUnavailableException e) 		{ throw new SIPException(e); }
-		
-		// connect to DB and get registrations
-		Logger.getLogger(getClass().getName()).log(Level.INFO, "Building MySQL database connection.");
-		_dbConnection = DBEngine.buildConnection();
-		_userList = _dbConnection.getAllRegisteredUsers();
 		
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Bootstrap done, setting up logger to start writing to file...");
 		Logger.getLogger("").addHandler(ServerParameters.FILEHANDLER);
