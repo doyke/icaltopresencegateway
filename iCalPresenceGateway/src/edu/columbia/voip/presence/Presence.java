@@ -127,7 +127,7 @@ public class Presence {
         String entityPidf = "entity=\"pres:" + primaryKey + "@columbia.edu\">";
         String endPidf = "</presence>";
 
-        presencePidf = presencePidf + headerPidf + entityPidf;
+        presencePidf = headerPidf + entityPidf;
 
         for (PresenceCalendar cal : presenseCalendars) {
 
