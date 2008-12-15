@@ -12,6 +12,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.columbia.voip.presence.Presence;
+import edu.columbia.voip.presence.SipLayer;
 import edu.columbia.voip.server.conf.ServerParameters;
 import edu.columbia.voip.user.GatewayUser;
 
@@ -28,10 +30,14 @@ public class GatewayThread extends Thread
 	
 	private ExecutorService _execService = null;
 	
+	private SipLayer _sipLayer = null;
+	
 	private Logger _logger = null;
+	
 
-	public GatewayThread(List<GatewayUser> list)
+	public GatewayThread(List<GatewayUser> list, SipLayer _sipLayer)
 	{
+		this._sipLayer = _sipLayer;
 		this._gatewayUsers = list;
 		this._logger = Logger.getLogger(getClass().getName());
 		
@@ -60,13 +66,13 @@ public class GatewayThread extends Thread
 				GatewayUser user = iter.next();
 				if (ServerParameters.doThreadPooling())
 				{
-					//_logger.log(Level.INFO, "Launching another thread from pool for user: " + user.getPrimaryKey());
-					_execService.execute(new GatewayDispatch(user));
+					_logger.log(Level.FINE, "Launching another thread from pool for user: " + user.getPrimaryKey());
+					_execService.execute(new GatewayDispatch(user, new Presence(_sipLayer)));
 				}
 				else
 				{
-					//_logger.log(Level.INFO, "Launching thread for user: " + user.getPrimaryKey());
-					Thread dispatch = new Thread(new GatewayDispatch(user));
+					_logger.log(Level.FINE, "Launching thread for user: " + user.getPrimaryKey());
+					Thread dispatch = new Thread(new GatewayDispatch(user, new Presence(_sipLayer)));
 					dispatch.start();
 				}
 			}

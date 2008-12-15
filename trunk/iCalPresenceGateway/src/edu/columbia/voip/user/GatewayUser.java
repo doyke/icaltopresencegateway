@@ -107,6 +107,7 @@ public class GatewayUser implements Serializable
 	{
 		this._lastModifiedMap = new HashMap<String, Date>();
 		this._previousActiveEvents = new ArrayList<Calendar>();
+		this._previousActiveEvents.add(new Calendar()); // dummy
 		this._primaryKey = primaryKey;
 		this._calendarAccount = calAccount;
 		this._jabberAccount = jabAccount;

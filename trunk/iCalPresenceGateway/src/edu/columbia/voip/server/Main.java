@@ -46,6 +46,8 @@ public class Main
     private static DBEngine _dbConnection = null;
     private static List<GatewayUser> _userList = null;
     
+    private SipLayer _sipLayer = null;
+    
     private void die(Exception e)
     {
     	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception caught", e);
@@ -77,7 +79,7 @@ public class Main
     	try {
     		doBootstrap();
         	
-    		_gatewayThread = new GatewayThread(_userList);
+    		_gatewayThread = new GatewayThread(_userList, _sipLayer);
     		_gatewayThread.start();
     		
             _registrationThread = new Thread(new RegistrationThread(_gatewayThread));
@@ -101,15 +103,13 @@ public class Main
 		
 		// initialized sip stack
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Initializing SIP Layer...");
-		SipLayer sipLayer = null;
-		try { sipLayer = new SipLayer(InetAddress.getLocalHost().getHostAddress(), 5061); }
+		try { _sipLayer = new SipLayer(InetAddress.getLocalHost().getHostAddress(), 5061); }
 		catch (TooManyListenersException e) 	{ throw new SIPException(e); }
 		catch (ObjectInUseException e) 			{ throw new SIPException(e); }
 		catch (UnknownHostException e) 			{ throw new SIPException(e); }
 		catch (InvalidArgumentException e) 		{ throw new SIPException(e); }
 		catch (TransportNotSupportedException e){ throw new SIPException(e); }
 		catch (PeerUnavailableException e) 		{ throw new SIPException(e); }
-		Presence.setSipLayer(sipLayer);
 		
 		// connect to DB and get registrations
 		Logger.getLogger(getClass().getName()).log(Level.INFO, "Building MySQL database connection.");
