@@ -58,7 +58,7 @@ public class Presence {
         String random = Integer.toString(r);
 
 
-       // String pidfStart = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:local=\"urn:example-com:pidf-status-type\" entity=\"pres:" + userid + "@columbia.edu\"><tuple id=\"ub93s3\"><status><basic>closed</basic><local:location>" + location + "</local:location></status></tuple><note>" + summary + ";" + description + ";" + startDate + ";" + endDate + ";" + category + "</note>></presence>";
+
         String cumulativeTuple;
 
         String tuplePidf = "<tuple id =\"" + random + "\">";
@@ -92,6 +92,30 @@ public class Presence {
 
     public static void sendAvailableMessage(String primaryKey) {
         // TODO Auto-generated method stub
+        String presencePidf = null;
+
+
+        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
+        String entityPidf = "entity=\"pres:" + primaryKey + "@columbia.edu\">";
+        String endPidf = "</presence>";
+
+        presencePidf = presencePidf + headerPidf + entityPidf;
+
+        Random generator = new Random();
+        int r = generator.nextInt();
+        String random = Integer.toString(r);
+        
+        String tuplePidf = "<tuple id =\"" + random + "\">";
+        String statusPidf = "<status><basic>closed</basic>";
+        String activityPidf = "<cal:activity>";
+        String summaryPidf = "<cal:summary>Available</cal:summary>";
+        String activityclosePidf = "</cal:activity>";
+        String statusclosePidf = "</cal:status>";
+        String tupleclosePidf = "</cal:tuple>";
+        
+        presencePidf = presencePidf + tuplePidf + statusPidf + activityPidf + summaryPidf + activityclosePidf + statusclosePidf + tupleclosePidf + endPidf;
+        
+        sendMessage(primaryKey, presencePidf);     
     }
 
     public static void sendMessage(String primaryKey,
@@ -102,22 +126,22 @@ public class Presence {
 
         String presencePidf = null;
 
-       
+
         String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
         String entityPidf = "entity=\"pres:" + primaryKey + "@columbia.edu\">";
         String endPidf = "</presence>";
-        
+
         presencePidf = presencePidf + headerPidf + entityPidf;
 
         for (PresenceCalendar cal : presenseCalendars) {
-            
-           presencePidf = presencePidf + createTuple(cal.getSummary(), cal.getDescription(), cal.getLocation(), cal.getStarttime(), cal.getEndtime(), cal.getLategory());            
-            
+
+            presencePidf = presencePidf + createTuple(cal.getSummary(), cal.getDescription(), cal.getLocation(), cal.getStarttime(), cal.getEndtime(), cal.getLategory());
+
         }
-        
-       presencePidf = presencePidf + endPidf;
-       
-       sendMessage(primaryKey, presencePidf);
+
+        presencePidf = presencePidf + endPidf;
+
+        sendMessage(primaryKey, presencePidf);
 
     }
 }
