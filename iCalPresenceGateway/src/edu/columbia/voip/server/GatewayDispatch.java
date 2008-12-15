@@ -310,16 +310,24 @@ public class GatewayDispatch implements Runnable
 			start = getEventStartDate(propertyMap.get(Property.DTSTART));
 			end = getEventEndDate(propertyMap.get(Property.DTEND), propertyMap.get(Property.DURATION), start);
 			
-			presenseCalendars.add(new PresenceCalendar(	propertyMap.get(Property.SUMMARY) == null 		? "[No Summary]" 	: propertyMap.get(Property.SUMMARY).getValue(), 
-														propertyMap.get(Property.DESCRIPTION) == null 	? "[No Description]": propertyMap.get(Property.DESCRIPTION).getValue(),  
-														propertyMap.get(Property.LOCATION) == null 		? "[No Location]" 	: propertyMap.get(Property.LOCATION).getValue(), 
-														propertyMap.get(Property.CATEGORIES) == null 	? "[No Categories]" : propertyMap.get(Property.CATEGORIES).getValue(),
+			presenseCalendars.add(new PresenceCalendar( getPropertyString(propertyMap.get(Property.SUMMARY), Property.SUMMARY), 
+														getPropertyString(propertyMap.get(Property.DESCRIPTION), Property.DESCRIPTION),  
+														getPropertyString(propertyMap.get(Property.LOCATION), Property.LOCATION),  
+														getPropertyString(propertyMap.get(Property.CATEGORIES), Property.CATEGORIES),  
 														DateFormat.getDateTimeInstance().format(start),
 														DateFormat.getDateTimeInstance().format(end)));
 		}
 		
 		// Send SIP presence message
 		_presence.sendMessage(_user.getPrimaryKey(), presenseCalendars);
+	}
+	
+	private String getPropertyString(Property property, String name)
+	{
+		if (property == null || property.getValue().length() == 0)
+			return "[No " + name + "]";
+		else
+			return property.getValue();
 	}
 
 	/**

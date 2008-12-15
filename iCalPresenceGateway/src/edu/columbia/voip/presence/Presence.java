@@ -50,7 +50,7 @@ public class Presence {
 
     private static String createTuple(String summary, String description, String location, String startDate, String endDate, String category) {
         Random generator = new Random();
-        int r = generator.nextInt();
+        int r = generator.nextInt(Integer.MAX_VALUE);
         String random = Integer.toString(r);
 
 
@@ -92,7 +92,7 @@ public class Presence {
 
 
         String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
-        String entityPidf = "entity=\"pres:" + primaryKey + "@columbia.edu\">";
+        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">";
         String endPidf = "</presence>";
 
         presencePidf =  headerPidf + entityPidf;
@@ -124,7 +124,7 @@ public class Presence {
 
 
         String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
-        String entityPidf = "entity=\"pres:" + primaryKey + "@columbia.edu\">";
+        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">";
         String endPidf = "</presence>";
 
         presencePidf = headerPidf + entityPidf;
