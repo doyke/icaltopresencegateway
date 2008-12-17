@@ -36,7 +36,7 @@ public class PresenceCalendar
 	/**
 	 * @return the _category
 	 */
-	public String getLategory() { return _category; }
+	public String getCategory() { return _category; }
 
 	/**
 	 * @return the _starttime

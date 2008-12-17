@@ -98,7 +98,8 @@ public class SipLayer implements SipListener {
 		sipProvider = sipStack.createSipProvider(udp);
 		sipProvider.addSipListener(this);
 		
-		System.out.println("SIP Stack Intialized");
+		Logger.getLogger(getClass().getName()).log(Level.INFO, "SIP stack initialized.");
+		//System.out.println("SIP Stack Initialized");
     }
 
     /**
@@ -182,12 +183,13 @@ public class SipLayer implements SipListener {
 		if ((status >= 200) && (status < 300)) { //Success!
 		    //messageProcessor.processInfo("--Sent");
 	        //    System.out.println("--Sent");
-	            System.out.println("SIP Message sent successfully");
-		    return;
+	        //System.out.println("SIP Message sent successfully");
+			Logger.getLogger(getClass().getName()).log(Level.FINE, "SIP Message sent successfully.");
+			return;
 		}
 	
 		//messageProcessor.processError("Previous message not sent: " + status);
-        System.out.println("Previous message not sent: " + status);
+		Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Previous sip message failed with response code " + status);
     }
 
     /** 
@@ -200,8 +202,8 @@ public class SipLayer implements SipListener {
 		String method = req.getMethod();
 		if (!method.equals("MESSAGE")) { //bad request type.
 		   // messageProcessor.processError("Bad request type: " + method);
-	            System.out.println("Bad request type: " + method);
-		    return;
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Bad request type: " + method);
+			return;
 		}
 	
 		FromHeader from = (FromHeader) req.getHeader("From");
@@ -215,9 +217,7 @@ public class SipLayer implements SipListener {
 		    ServerTransaction st = sipProvider.getNewServerTransaction(req);
 		    st.sendResponse(response);
 		} catch (Throwable e) {
-		    e.printStackTrace();
-		    
-	            System.out.println("Can't send OK reply.");
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Can't send OK reply.", e);
 		}
     }
 
@@ -237,9 +237,7 @@ public class SipLayer implements SipListener {
      * message transmission error.  
      */
     public void processIOException(IOExceptionEvent evt) {
-	
-        System.out.println("Previous message not sent: "
-		+ "I/O Exception");
+		Logger.getLogger(getClass().getName()).log(Level.SEVERE, "processIOException from sipLayer.");
     }
 
     /** 

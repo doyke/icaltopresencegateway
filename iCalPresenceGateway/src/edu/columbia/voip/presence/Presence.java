@@ -8,11 +8,9 @@
  */
 package edu.columbia.voip.presence;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +42,9 @@ public class Presence {
 	
 	public static final String ELEMENT_OPEN				= "open";
 	public static final String ELEMENT_CLOSED			= "closed";
-
+	public static final String ELEMENT_AVAILABLE 		= "Available";
+	public static final String ELEMENT_EMPTY 			= ""; 
+	
 	public static final String TAG_PRESENCE 			= "presence";
 	public static final String TAG_XMLNS 	 	 		= "xmlns";
 	public static final String TAG_XMLNS_RPID 	 		= "xmlns:rpid";
@@ -100,14 +100,13 @@ public class Presence {
 															"unknown",
 															"vacation",
 															"working",
-															"worship"}; 
-	
-    
-    public Presence(SipLayer _sipLayer) {
+															"worship"};
+
+	public Presence(SipLayer _sipLayer) {
     	this._sipLayer = _sipLayer;
     }
 
-    public void sendMessage(String userid, String pidfMsg) throws SIPException {
+    private void sendMessage(String userid, String pidfMsg) throws SIPException {
         Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send SIP presence message to '" +
                 userid + "'");
         // TODO @Milind, send this calendar event to the presence server for user <user>
@@ -127,100 +126,31 @@ public class Presence {
         }
     }
 
-    @Deprecated
-    private String createTuple(String summary, String description, String location, String startDate, String endDate, String category) {
-        Random generator = new Random();
-        int r = generator.nextInt(Integer.MAX_VALUE);
-        String random = Integer.toString(r);
-
-        String cumulativeTuple;
-
-        String tuplePidf = "<tuple id =\"" + random + "\">\n";
-        String statusPidf = "<status>\n<basic>closed</basic>\n";
-        String activityPidf = "<cal:activity>\n";
-        String summaryPidf = "<cal:summary>" + summary + "</cal:summary>\n";
-        cumulativeTuple = tuplePidf + statusPidf + activityPidf + summaryPidf;
-        if (!description.equalsIgnoreCase("[no description]")) {
-            String descriptionPidf = "<cal:description>" + description + "</cal:description>\n";
-            cumulativeTuple = cumulativeTuple + descriptionPidf;
-        }
-        if (!location.equalsIgnoreCase("[no location]")) {
-            String locationPidf = "<cal:location>" + location + "</cal:location>\n";
-            cumulativeTuple = cumulativeTuple + locationPidf;
-        }
-        String startDatePidf = "<cal:startdate>" + startDate + "</cal:startdate>\n";
-        cumulativeTuple = cumulativeTuple + startDatePidf;
-        String endDatePidf = "<cal:enddate>" + endDate + "</cal:enddate>\n";
-        cumulativeTuple = cumulativeTuple + endDatePidf;
-        if (!category.equalsIgnoreCase("[no categories]")) {
-            String categoryPidf = "<cal:category>" + category + "</cal:category>\n";
-            cumulativeTuple = cumulativeTuple + categoryPidf;
-        }
-        String activityclosePidf = "</cal:activity>\n";
-        String statusclosePidf = "</status>\n";
-        String tupleclosePidf = "</tuple>\n";
-        cumulativeTuple = cumulativeTuple + activityclosePidf + statusclosePidf + tupleclosePidf;
-
-        return cumulativeTuple;
-    }
-
-    public void sendAvailableMessage(String primaryKey) throws SIPException {
-        // TODO Auto-generated method stub
-        String presencePidf = null;
-
-
-        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
-        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">\n";
-        String endPidf = "</presence>";
-
-        presencePidf =  headerPidf + entityPidf;
-
-        Random generator = new Random();
-        int r = generator.nextInt();
-        String random = Integer.toString(r);
-        
-        String tuplePidf = "<tuple id =\"" + random + "\">\n";
-        String statusPidf = "<status>\n<basic>closed</basic>\n";
-        String activityPidf = "<cal:activity>\n";
-        String summaryPidf = "<cal:summary>Available</cal:summary>\n";
-        String activityclosePidf = "</cal:activity>\n";
-        String statusclosePidf = "</status>\n";
-        String tupleclosePidf = "</tuple>\n";
-        
-        presencePidf = 	presencePidf + tuplePidf + statusPidf + activityPidf + summaryPidf + 
-        				activityclosePidf + statusclosePidf + tupleclosePidf + endPidf;
-        
-        sendMessage(primaryKey, presencePidf);     
+    /**
+     * Called from DispatchThread to send an available presence message to the server.
+     * @param user GatewayUser who has become available
+     * @throws SIPException
+     */
+    public void sendAvailableMessage(GatewayUser user) throws SIPException 
+    {
+    	Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Sending Available presence message to user '" + 
+					user.getPrimaryKey() + "'");
+		String pidfMessage = null;
+    	try { 
+			pidfMessage = createAvailableRPIDBody(user);
+			Logger.getLogger(getClass().getName()).log(Level.FINE, pidfMessage);
+    		sendMessage(user.getPrimaryKey(), pidfMessage);
+    	}
+    	catch (IOException e) { throw new SIPException(e); }
+		catch (ParserConfigurationException e) { throw new SIPException(e); }
     }
     
-    @Deprecated
-    public void sendMessage(String primaryKey,
-            List<PresenceCalendar> presenseCalendars) throws SIPException {
-        // TODO Auto-generated method stub
-        Logger.getLogger(Presence.class.getName()).log(Level.INFO, "Got request to send " + presenseCalendars.size() +
-                " SIP presence messages to '" + primaryKey + "'");
-
-        String presencePidf = null;
-
-
-        String headerPidf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<presence xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:cal=\"http://id.example.com/presence/\"";
-        String entityPidf = " entity=\"pres:" + primaryKey + "@columbia.edu\">\n";
-        String endPidf = "</presence>";
-
-        presencePidf = headerPidf + entityPidf;
-
-        for (PresenceCalendar cal : presenseCalendars) {
-
-            presencePidf = presencePidf + createTuple(cal.getSummary(), cal.getDescription(), cal.getLocation(), cal.getStarttime(), cal.getEndtime(), cal.getLategory());
-
-        }
-
-        presencePidf = presencePidf + endPidf;
-
-        sendMessage(primaryKey, presencePidf);
-
-    }
-    
+    /**
+     * Called from DispatchThread to send an a SIP presence message from the list of in-progress PresenceCalendar events.
+     * @param user GatewayUser with event(s) in progress.
+     * @param presenseCalendars list of 1 or more events taking place right now.
+     * @throws SIPException
+     */
     public void sendMessage(GatewayUser user,
 			List<PresenceCalendar> presenseCalendars) throws SIPException
 	{
@@ -235,6 +165,65 @@ public class Presence {
     	catch (IOException e) { throw new SIPException(e); }
 		catch (ParserConfigurationException e) { throw new SIPException(e); }
 	}
+    
+    /**
+     * Creates XML body for SIP presence message based on list of in-progress calendar event fields.
+     * @throws IOException
+     * @throws ParserConfigurationException 
+     */
+    private String createAvailableRPIDBody(GatewayUser user) throws IOException, ParserConfigurationException
+    {	
+    	Element root = null;
+        Document xmlDoc = null;
+        
+        Random generator = new Random();
+        int r = generator.nextInt(Integer.MAX_VALUE);
+        String random = Integer.toString(r);
+
+    	// Create an XML Document
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = dbFactory.newDocumentBuilder();
+        xmlDoc = docBuilder.newDocument();
+    
+        // Create the root element with namespace attributes
+        root = xmlDoc.createElement(TAG_PRESENCE);
+        root.setAttribute(TAG_XMLNS, TAG_XMLNS_VALUE);
+        root.setAttribute(TAG_XMLNS_RPID, TAG_XMLNS_RPID_VALUE);
+        root.setAttribute(TAG_XMLNS_GP, TAG_XMLNS_GP_VALUE);
+        root.setAttribute(TAG_XMLNS_CL, TAG_XMLNS_CL_VALUE);
+        root.setAttribute(TAG_ENTITY, getPresentityName(user.getPrimaryKey(), user.getCalendarAccount().getHost()));
+
+        Element tuple = xmlDoc.createElement(TAG_TUPLE);
+        tuple.setAttribute(TAG_ID, random);
+        
+        Element status = xmlDoc.createElement(TAG_STATUS);
+        
+        Element basic = xmlDoc.createElement(TAG_BASIC);
+        status.appendChild(basic);
+        basic.appendChild(xmlDoc.createTextNode(ELEMENT_OPEN));
+        
+        Element activites = xmlDoc.createElement(TAG_RPID_ACTIVITIES);
+        
+        Element rpidNote = xmlDoc.createElement(TAG_RPID_NOTE);
+        rpidNote.appendChild(xmlDoc.createTextNode(ELEMENT_AVAILABLE));
+        
+        Element other = xmlDoc.createElement(TAG_RPID_OTHER);
+    	other.appendChild(xmlDoc.createTextNode(ELEMENT_EMPTY));
+    	activites.appendChild(other);
+        
+        Element note = xmlDoc.createElement(TAG_NOTE);
+        note.appendChild(xmlDoc.createTextNode(ELEMENT_EMPTY));
+        
+        tuple.appendChild(status);
+        tuple.appendChild(activites);
+        
+        root.appendChild(tuple);
+        
+        // Add the presence element to the document
+        xmlDoc.appendChild(root);
+        
+       return getXMLString(xmlDoc);
+    }
 
     /**
      * Creates XML body for SIP presence message based on list of in-progress calendar event fields.
@@ -292,12 +281,12 @@ public class Presence {
             Element rpidNote = xmlDoc.createElement(TAG_RPID_NOTE);
             rpidNote.appendChild(xmlDoc.createTextNode(event.getSummary()));
             
-            if (isPredefinedActivity(event.getLategory()))
-            	activites.appendChild(xmlDoc.createTextNode("rpid:" + event.getLategory()));
+            if (isPredefinedActivity(event.getCategory()))
+            	activites.appendChild(xmlDoc.createTextNode("rpid:" + event.getCategory()));
             else
             {
             	Element other = xmlDoc.createElement(TAG_RPID_OTHER);
-            	other.appendChild(xmlDoc.createTextNode(event.getLategory()));
+            	other.appendChild(xmlDoc.createTextNode(event.getCategory()));
             	activites.appendChild(other);
             }
             
@@ -347,8 +336,8 @@ public class Presence {
     	// Setup the format for the XML file
     	outFormat.setEncoding(XML_ENCODING);
     	outFormat.setVersion(XML_VERSION);
-    	outFormat.setIndenting(false);
-    	//outFormat.setIndent(4);
+    	outFormat.setIndenting(true);
+    	outFormat.setIndent(4);
 
     	// Define a Writer and apply format settings
     	serializer.setOutputCharStream(strWriter);

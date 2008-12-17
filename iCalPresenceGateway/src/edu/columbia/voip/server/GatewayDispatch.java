@@ -4,10 +4,12 @@
 package edu.columbia.voip.server;
 
 import java.io.IOException;
+import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -75,19 +77,19 @@ public class GatewayDispatch implements Runnable
 			return;
 		} catch (ObjectStoreException e) {
 			_logger.log(Level.SEVERE, "Got ObjectStoreException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
-			throw new RuntimeException(e);
 		} catch (ObjectNotFoundException e) {
 			_logger.log(Level.SEVERE, "Got ObjectNotFoundException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
-			throw new RuntimeException(e);
 		} catch (HttpException e) {
 			_logger.log(Level.SEVERE, "Got HttpException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
-			throw new RuntimeException(e);
 		} catch (IOException e) {
-			_logger.log(Level.SEVERE, "Got IOException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
-			throw new RuntimeException(e);
+			if (e instanceof NoRouteToHostException)
+				_logger.log(Level.SEVERE, getBadErrorString("Very bad, NoRouteToHostException. Do we have a network connection?"), e);
+			else if (e instanceof UnknownHostException)
+				_logger.log(Level.SEVERE, getBadErrorString("Very bad, UnknownHostException. Is DNS down? Do we have a network connection?"), e);
+			else
+				_logger.log(Level.SEVERE, "Got IOException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
 		} catch (DavException e) {
 			_logger.log(Level.SEVERE, "Got DavException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
-			throw new RuntimeException(e);
 		} 
 		
 		// Compare list of calendars to my hashtable of calendar events and
@@ -110,6 +112,16 @@ public class GatewayDispatch implements Runnable
 		processCalendarEvents(myActiveEvents);
 		_logger.log(Level.INFO, "Successfully exiting dispatch thread for calendar user '" + _user.getCalendarAccount().getUsername() + "'");	
 	}
+	
+	private String getBadErrorString(String message)
+	{
+		StringBuffer buf = new StringBuffer();
+		buf.append("\n\n");
+		buf.append("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
+		buf.append(message + "\n");
+		buf.append("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n");
+		return buf.toString();
+	}
 
 	private void processCalendarEvents(List<Calendar> myActiveEvents)
 	{
@@ -123,8 +135,7 @@ public class GatewayDispatch implements Runnable
 			
 			// if any events are in my hashtable then those events have now
 			// ended. send a available presence message.
-			_logger.log(Level.INFO, "Sending Available presence message");
-			try { _presence.sendAvailableMessage(_user.getPrimaryKey()); }
+			try { _presence.sendAvailableMessage(_user); }
 			catch (SIPException e) { _logger.log(Level.SEVERE, "got SIP exception when trying to send available message."); }
 			_user.getLastModifiedMap().clear();
 			_user.getPreviousActiveEvents().clear();
@@ -328,12 +339,16 @@ public class GatewayDispatch implements Runnable
 			start = getEventStartDate(propertyMap.get(Property.DTSTART));
 			end = getEventEndDate(propertyMap.get(Property.DTEND), propertyMap.get(Property.DURATION), start);
 			
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			String tz = (new SimpleDateFormat("Z")).format(start);
+			tz = tz.substring(0,3) + ":" + tz.substring(3);
+			
 			presenseCalendars.add(new PresenceCalendar( getPropertyString(propertyMap.get(Property.SUMMARY), Property.SUMMARY), 
 														getPropertyString(propertyMap.get(Property.DESCRIPTION), Property.DESCRIPTION),  
 														getPropertyString(propertyMap.get(Property.LOCATION), Property.LOCATION),  
 														getPropertyString(propertyMap.get(Property.CATEGORIES), Property.CATEGORIES),  
-														DateFormat.getDateTimeInstance().format(start),
-														DateFormat.getDateTimeInstance().format(end)));
+														df.format(start) + tz,
+														df.format(end) + tz));
 		}
 		
 		// Send SIP presence message
