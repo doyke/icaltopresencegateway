@@ -184,7 +184,7 @@ public class SipLayer implements SipListener {
 		    //messageProcessor.processInfo("--Sent");
 	        //    System.out.println("--Sent");
 	        //System.out.println("SIP Message sent successfully");
-			Logger.getLogger(getClass().getName()).log(Level.FINE, "SIP Message sent successfully.");
+			Logger.getLogger(getClass().getName()).log(Level.INFO, "SIP Message sent successfully.");
 			return;
 		}
 	

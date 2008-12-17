@@ -206,6 +206,7 @@ public class Presence {
         
         Element rpidNote = xmlDoc.createElement(TAG_RPID_NOTE);
         rpidNote.appendChild(xmlDoc.createTextNode(ELEMENT_AVAILABLE));
+        activites.appendChild(rpidNote);
         
         Element other = xmlDoc.createElement(TAG_RPID_OTHER);
     	other.appendChild(xmlDoc.createTextNode(ELEMENT_EMPTY));
@@ -216,6 +217,7 @@ public class Presence {
         
         tuple.appendChild(status);
         tuple.appendChild(activites);
+        tuple.appendChild(note);
         
         root.appendChild(tuple);
         
@@ -282,19 +284,25 @@ public class Presence {
             rpidNote.appendChild(xmlDoc.createTextNode(event.getSummary()));
             
             if (isPredefinedActivity(event.getCategory()))
-            	activites.appendChild(xmlDoc.createTextNode("rpid:" + event.getCategory()));
+            {
+            	Element predefined = xmlDoc.createElement("rpid:" + event.getCategory().toLowerCase());
+            	predefined.appendChild(xmlDoc.createTextNode(ELEMENT_EMPTY));
+            	activites.appendChild(predefined);
+            }
             else
             {
             	Element other = xmlDoc.createElement(TAG_RPID_OTHER);
             	other.appendChild(xmlDoc.createTextNode(event.getCategory()));
             	activites.appendChild(other);
             }
+            activites.appendChild(rpidNote);
             
             Element note = xmlDoc.createElement(TAG_NOTE);
             note.appendChild(xmlDoc.createTextNode(event.getDescription()));
             
             tuple.appendChild(status);
             tuple.appendChild(activites);
+            tuple.appendChild(note);
             
             root.appendChild(tuple);
         }
@@ -336,8 +344,8 @@ public class Presence {
     	// Setup the format for the XML file
     	outFormat.setEncoding(XML_ENCODING);
     	outFormat.setVersion(XML_VERSION);
-    	outFormat.setIndenting(true);
-    	outFormat.setIndent(4);
+    	outFormat.setIndenting(false);
+//    	outFormat.setIndent(4);
 
     	// Define a Writer and apply format settings
     	serializer.setOutputCharStream(strWriter);
