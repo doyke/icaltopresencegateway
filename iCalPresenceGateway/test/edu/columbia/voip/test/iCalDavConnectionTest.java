@@ -3,8 +3,10 @@
  */
 package edu.columbia.voip.test;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.NoHttpResponseException;
 import org.apache.jackrabbit.webdav.DavException;
 
@@ -58,6 +60,9 @@ public class iCalDavConnectionTest extends TestCase {
 		}
 		catch (ObjectNotFoundException e) 	{ fail("ObjectNotFoundException: " + e.getMessage()); }
 		catch (ObjectStoreException e)		{ fail("ObjectStoreException: " + e.getMessage()); }
-		catch (NoCalendarEventsException e) { fail("NoCalendarEventsException: " + e.getMessage()); }
+		catch (NoCalendarEventsException e) { fail("NoCalendarEventsException: " + e.getMessage()); } 
+		catch (HttpException e) 			{ fail("HttpException: " + e.getMessage()); } 
+		catch (IOException e) 				{ fail("IOException: " + e.getMessage()); } 
+		catch (DavException e) 				{ fail("DavException: " + e.getMessage()); }
 	}
 }

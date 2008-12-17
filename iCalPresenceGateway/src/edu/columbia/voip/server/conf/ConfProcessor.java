@@ -92,6 +92,8 @@ public class ConfProcessor
 				ServerParameters.PRESENCE_USE_SSL = Boolean.parseBoolean(value);
 			else if (key.equals("PresenceUsername"))
 				ServerParameters.PRESENCE_USERNAME = value;
+			else if (key.equals("PresenceTimeout"))
+				ServerParameters.PRESENCE_RESPONSE_TIMEOUT = Integer.parseInt(value);
 			else if (key.equals("MysqlHost"))
 				ServerParameters.MYSQL_HOSTNAME = value;
 			else if (key.equals("MysqlRegistrationDB"))

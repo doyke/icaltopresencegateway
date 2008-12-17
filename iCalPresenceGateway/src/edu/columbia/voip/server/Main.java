@@ -82,7 +82,7 @@ public class Main
     		_gatewayThread = new GatewayThread(_userList, _sipLayer);
     		_gatewayThread.start();
     		
-            _registrationThread = new Thread(new RegistrationThread(_gatewayThread));
+    		_registrationThread = new Thread(new RegistrationThread(_gatewayThread));
             _registrationThread.start();
             
             _gatewayThread.join();
@@ -115,8 +115,9 @@ public class Main
 		catch (InvalidArgumentException e) 		{ throw new SIPException(e); }
 		catch (TransportNotSupportedException e){ throw new SIPException(e); }
 		catch (PeerUnavailableException e) 		{ throw new SIPException(e); }
-		
-		Logger.getLogger(getClass().getName()).log(Level.INFO, "Bootstrap done, setting up logger to start writing to file...");
+		_sipLayer.setMainThread(Thread.currentThread());
+        
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Bootstrap done, setting up logger to start writing to file...");
 		Logger.getLogger("").addHandler(ServerParameters.FILEHANDLER);
 		Logger.getLogger("").setLevel(ServerParameters.LOG_LEVEL);
 	}

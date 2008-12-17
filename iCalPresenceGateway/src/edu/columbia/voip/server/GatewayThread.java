@@ -42,9 +42,6 @@ public class GatewayThread extends Thread
 		this._sipLayer = _sipLayer;
 		this._gatewayUsers = list;
 		this._logger = Logger.getLogger(getClass().getName());
-		
-		if (ServerParameters.doThreadPooling())
-			_execService = Executors.newFixedThreadPool(ServerParameters.THREAD_POOL_SIZE);
 	}
 	
 	/* (non-Javadoc)
@@ -84,7 +81,10 @@ public class GatewayThread extends Thread
 			}
 			
 			try { Thread.sleep(ServerParameters.POLL_INTERVAL); }
-			catch (InterruptedException e) { _logger.log(Level.SEVERE, "Interrupted exception caught", e); }
+			catch (InterruptedException e) { 
+				_logger.log(Level.SEVERE, "Interrupted exception caught", e);
+				throw new RuntimeException(e);
+			}
 			
 			_logger.log(Level.INFO, "Finished sleeping for " + (ServerParameters.POLL_INTERVAL / 1000 ) + 
 									" seconds, about to do executeService again.");

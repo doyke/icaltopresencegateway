@@ -19,7 +19,7 @@ import java.util.logging.Level;
 public class ServerParameters {
     
     /** Filename of server log that record debug messages/events. */
-    public static String 		LOGFILE = "icalgateway.log";
+    public static String 		LOGFILE = "gatewayical.log";
     
     /** Used by Java logging for naming the log file */
     public static FileHandler 	FILEHANDLER = null;
@@ -53,6 +53,9 @@ public class ServerParameters {
 
     /** Presence username for accessing server */
 	public static String		PRESENCE_USERNAME = "presence";
+	
+	/** Time (in msec) to wait for a response from the SIP server before considered a timeout */
+	public static int			PRESENCE_RESPONSE_TIMEOUT = 500;
 	
 	/** Interval, measured in milliseconds, between when the calendar server is polled 
      * for new calendar events. */
