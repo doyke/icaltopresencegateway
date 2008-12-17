@@ -122,6 +122,10 @@
             
         }
     
+        function isInteger(s) {
+            return (s.toString().search(/^[0-9]+$/) == 0);
+        }
+
     
         function ajaxFunction(divId){
             
@@ -197,13 +201,13 @@
                     displayElement.innerHTML = "<img src=\"green_tick.jpg\">";
                     inputError = false;    
                 }
-                if((divId == 6) && (isNaN(formVal)))
+                if(divId == 6)
                 {
-                    displayElement.innerHTML = "Please enter a numeric value"; 
+                    if (isNaN(formVal) || !isInteger(formVal) || formVal >= 65536 || formVal < 2) {
+                        displayElement.innerHTML = "Please enter a valid port number";
+                        inputError = true;
+                    }
                 }
-                            
-                           
-              
             }
             
           validation();
