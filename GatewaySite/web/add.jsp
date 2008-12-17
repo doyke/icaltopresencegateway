@@ -157,26 +157,18 @@
 
                 // Create a function that will receive data sent from the server
                 ajaxRequest.onreadystatechange = function(){
-                
                     var response;
-                
                     if(ajaxRequest.readyState == 4){
-                        
                         response = ajaxRequest.responseText;
-                        
-                        if(response == 1){
+                        if(response < 0)
+                            displayElement.innerHTML = "Could not connect to registration DB";
+                        else if (response == 1)
                             displayElement.innerHTML = "User already exists"; 
-                        }
-                        
-                        if(response == 2){
+                        else if (response == 2)
                             displayElement.innerHTML = "<img src=\"green_tick.jpg\">"; 
-                        }
-                        
-                     
-                       validation();  
-                   
+                       
+                        validation();  
                     }                  
-                                
                 }
             
                 var uniVal = document.myForm.uni.value;

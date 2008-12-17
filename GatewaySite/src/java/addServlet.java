@@ -56,53 +56,49 @@ public class addServlet extends HttpServlet {
             throws ServletException, IOException {
 
         PrintWriter out = response.getWriter();
-        boolean userExists = false;
         String enteredUni = request.getParameter("enteredUni");
 
         Connection conn = null;
-
+        int returnCode = -1;
         try {
 
-            try {
+            String userName = "btuser";
+            String passwd = "passwd";
+            String url = "jdbc:mysql://localhost:3306/icalgateway";
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            conn = DriverManager.getConnection(url, userName, passwd);
+            System.out.println("Database connection established");
+            Statement s = conn.createStatement();
+            String sqlquery = null;
 
-                String userName = "btuser";
-                String passwd = "passwd";
-                String url = "jdbc:mysql://localhost:3306/icalgateway";
-                Class.forName("com.mysql.jdbc.Driver").newInstance();
-                conn = DriverManager.getConnection(url, userName, passwd);
-                System.out.println("Database connection established");
-                Statement s = conn.createStatement();
-                String sqlquery = null;
-
-                sqlquery = "SELECT * FROM icalgateway.registrations where cuid='" + enteredUni + "';";
-                s.executeQuery(sqlquery);
-                ResultSet rs = s.getResultSet();
-                if (rs.next()) {
-                    userExists = true;
-                }
-                rs.close();
-                s.close();
-            } catch (Exception e) {
-                System.err.println(e);
-            } finally {
-                if (conn != null) {
-                    try {
-                        conn.close();
-                        System.out.println("Database connection terminated");
-
-                    } catch (Exception e) { /* ignore close errors */ }
-                }
-            }
-
-            if (userExists) {System.out.println("1");
-                out.println("1");
-            } else {System.out.println("2");
-                out.println("2");
-            }
+            sqlquery = "SELECT * FROM icalgateway.registrations where cuid='" + enteredUni + "';";
+            s.executeQuery(sqlquery);
+            ResultSet rs = s.getResultSet();
+            if (rs.next())
+                returnCode = 1;
+            else
+                returnCode = 2;
+                    
+            rs.close();
+            s.close();
+        } catch (IllegalAccessException e) {
+            returnCode = -4;
+        } catch (InstantiationException e) {
+            returnCode = -3;
+        } catch (ClassNotFoundException e) {
+            returnCode = -2;
+        } catch (SQLException e) {
+            returnCode = -1;
         } finally {
-            out.close();
+            if (conn != null) {
+                try {
+                    conn.close();
+                    System.out.println("Database connection terminated");
+                } catch (Exception e) { /* ignore close errors */ }
+            }
         }
 
+        out.println(returnCode);
     }
 
     /** 
