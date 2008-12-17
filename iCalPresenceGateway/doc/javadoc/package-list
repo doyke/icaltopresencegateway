@@ -1,0 +1,7 @@
+edu.columbia.voip.ical
+edu.columbia.voip.presence
+edu.columbia.voip.server
+edu.columbia.voip.server.conf
+edu.columbia.voip.user
+edu.columbia.voip.watcher
+edu.columbia.voip.xmpp

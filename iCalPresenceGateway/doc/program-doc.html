@@ -1,10 +1,10 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
 <head>
-<title>iCal-to-Presence Gateway</title>
+<title>iCal-to-Presence Gateway - Program Documentation</title>
 <meta name="author" content="Milind,John,Suhas">
-<meta name="keywords" content="ical,presence">
-<meta name="description" content="Brief description of project.">
+<meta name="keywords" content="ical,presence,gateway,caldav">
+<meta name="description" content="Detailed description of gateway.">
 
 <style type="text/css">
 .cmd {
@@ -15,13 +15,13 @@
 .default {
 	font-family: courier new;
 	font-size: 12px;
-	font-weight:bold;
+	font-weight: bold;
 }
 </style>
 </head>
 <body bgcolor=white>
 
-<h1>iCal-to-Presence Gateway</h1>
+<h1>iCal-to-Presence Gateway - Program Documentation</h1>
 <address>
 John Morales<br>
 Columbia University<br>
@@ -46,25 +46,16 @@ USA<br>
 <a href="mailto:ss3474@columbia.edu">ss3474@columbia.edu</a>
 </address>
 <p>
-<address>
-Henning Schulzrinne<br>
-Columbia University<br>
-New York, NY 10027<br>
-USA<br>
-<a href="hgs@cs.columbia.edu">hgs@cs.columbia.edu</a>
-</address>
-
 
 <h2>Abstract</h2>
 
-<p>This report describes a gateway between iCalendar calendar server (such as Apple's calendar
-server implementation) and SIP Presence server. Users register their calendar account
-with the gateway (via Servlet) and the gateway syncs their calendar events with the
+<p>This report describes a gateway between an iCalendar calendar server that implements CalDAV and a
+SIP Presence server. Users gain access to the gateway service by registering their calendar account
+with the gateway through a web interface. The gateway then syncs their calendar events with the
 Presence server. Periodic polling of the calendar server provides automated busy tracking
 for those subscribing to user's presence information</p>
 
-<p>The gateway is being implemented in Java leveraging the ical4j, ical4j-connector,
-jain-sip, and various Apache libraries for making HTTP-like requests and logging.</p>
+<p>The gateway was implemented in Java and leverages the ical4j, ical4j-connector, jain-sip, and various Apache libraries for making HTTP-like requests and logging.</p>
 
 <h2>System Requirements</h2>
 
@@ -72,14 +63,15 @@ jain-sip, and various Apache libraries for making HTTP-like requests and logging
   <li>Platform Independent (JVM)</li>
   <li>Network connection</li>
   <li>Database (Currently using MySQL)</li>
-  <li>Java Servlet Container (e.g., tomcat)</li>
+  <li>Java Servlet Container (e.g., Tomcat)</li>
 </ul>
 
 <h2>Quick-Start Installation and Running</h2>
 <ul>
    <li>Extract compressed archive ical-to-presence-gateway_0.0.1.tar.bz2 to directory DIR and move to that directory.</li>
 
-		<br><span class="cmd">$> tar -C DIR/ -jxf ical-to-presence-gateway_0.0.1.tar.bz2</span><br>
+		<br>
+		<span class="cmd">$> tar -C DIR/ -jxf ical-to-presence-gateway_0.0.1.tar.bz2</span><br>
 		<span class="cmd">$> cd DIR/ical-gateway/</span><br><br>
 
    <li>Rename the sample configuration file to the correct name</li>
@@ -88,22 +80,33 @@ jain-sip, and various Apache libraries for making HTTP-like requests and logging
 
    <li>Start the server using the run.sh script</li>
 
-	<br><span class="cmd">$> ./run.sh -q</span><br>
+	<br><span class="cmd">$> ./run.sh</span><br>
 
 </ul>
 
-<p>The server will fire up in quiet mode, displaying something similar to the following:</p>
+<p>The server will start, displaying something similar to the following:</p>
 
 <span class="cmd">
 $> ./run.sh -q<br/>
-Dec 10, 2008 12:07:04 PM edu.columbia.voip.server.Main <init><br>
-INFO: Starting up Gateway: Wed Dec 10 12:07:04 EST 2008<br>
-Dec 10, 2008 12:07:04 PM edu.columbia.voip.server.Main doBootstrap<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.Main &lt;init&gt;<br>
+INFO: Starting up Gateway: Wed Dec 17 16:28:48 EST 2008<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.Main doBootstrap<br>
 INFO: Loading configurations from gateway.conf...<br>
-Dec 10, 2008 12:07:04 PM edu.columbia.voip.server.Main doBootstrap<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.Main doBootstrap<br>
 INFO: Building MySQL database connection.<br>
-Dec 10, 2008 12:07:14 PM edu.columbia.voip.server.GatewayThread run<br>
-INFO: Gateway Started.<br></span>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.DBEngine getAllRegisteredUsers<br>
+INFO: Retreiving registered users from database.<br>
+log4j:WARN No appenders could be found for logger (org.apache.commons.httpclient.params.DefaultHttpParams).<br>
+log4j:WARN Please initialize the log4j system properly.<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.Main doBootstrap<br>
+INFO: Initializing SIP Layer...<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.presence.SipLayer &lt;init&gt;<br>
+INFO: SIP stack initialized.<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.Main doBootstrap<br>
+INFO: Bootstrap done, setting up logger to start writing to file...<br>
+Dec 17, 2008 4:28:48 PM edu.columbia.voip.server.RegistrationThread run<br>
+INFO: Starting up registration thread<br>
+</span>
 
 <h2>Advanced Configuration</h2>
 
@@ -140,9 +143,17 @@ PollInterval 30000<br>
 
 <li>LogfileName</li>
 <p><span class="cmd">
-# Name of server log4j logfile<br>
-# <span class="default">(default: ical_gateway.log)</span><br>
-LogfileName ical_gateway.log<br>
+# Name of server java.util.Logger logfile<br>
+# <span class="default">(default: gatewayical.log)</span><br>
+LogfileName gatewayical.log<br>
+</span></p>
+
+<li>LogfileLevel</li>
+<p><span class="cmd">
+# Level of debug info saved to the logfile.<br>
+# Possible values include: finest, fine, info, severe, warning, off<br>
+# <span class="default">(default: info)</span><br>
+LogfileLevel info<br>
 </span></p>
 
 <li>ICalendarHost</li>
@@ -195,6 +206,14 @@ PresenceUseSSL false<br>
 PresenceUsername presence<br>
 </span></p>
 
+<li>PresenceTimeout</li>
+<p><span class="cmd">
+# Time (in msec) to wait for a response from the presence server before<br>
+# assuming the server is done (fatal exception).<br>
+# <span class="default">(default: 500)</span><br>
+PresenceTimeout 500<br>
+</span></p>
+
 <li>MysqlHost</li>
 <p><span class="cmd">
 # Hostname where the mysql server is running<br>
@@ -231,32 +250,22 @@ MysqlUsername root<br>
 </span></p>
 
 </ul>
-
-<h2>Running</h2>
-
-<span class="cmd">
-$> ./run.sh<br/>
-</span>
-
-<p>The server will fire up with regular amount of verbose output. For a list of command line parameters, type:</p>
-
-<span class="cmd">
-$> ./run.sh --help<br/></span>
-
+<br>
 <h2>High-level Usage</h2>
 
-<p>Users may interact and register to use the gateway by browsing to a URL
-containing a registration servlet. The concept is to have users register their iCalendar
-server information (host, port, URI) and credentials (username, password)
-with our MySQL database. There will also be an option to select the pre-defined
-Columbia iCalendar server from a dropdown.</p>
-
-<p>Once registered, the user's record is permanently stored in the database and
-is read by the server's bootstrap routine during server startup. The bootstrap
+<p>Users must register their iCalendar server information (host, port, URI) and credentials (username, password)
+with the gateway's MySQL database in order to use the service. Registration is provided via a web form
+that prompts the user for the relevant information. The the form is submitted, the servlet adds the new gateway account to the registration database as well as creates a new entry in the presence database from which watchers may choose to subscribe.
+Once registered, the user's record is read by the server's bootstrap routine during server startup. The bootstrap
 process accesses the database to obtain all the relevant info for registered
 users, saving a data structure in memory for each such "account".</p>
 
-<h2>Possible Enhancements</h2>
+<img src="images/registration_screenshot.png" alt="registration web interface"></img>
+
+<p>Figure 1: Registration UI</p>
+
+
+<h2>Possible Enhancements and Limitations</h2>
  <ol>
    <li>Due to the limitations of the Apple iCalendar server (and the iCalendar
    model in general), there is no way to escape polling as the primary means
@@ -271,20 +280,12 @@ users, saving a data structure in memory for each such "account".</p>
 
 
 <h2>How to build Gateway</h2>
- <p>For *NIX platforms, please use the standard autotools method:</p>
- <span class="cmd">
- $> cd ical-gateway/<br>
- $> ./configure --prefix=PREFIX<br>
- $> make<br>
-</span>
-
-<p>For win32 platforms, please use the build.bat file, which essentially
-performs an ANT build:</p>
+ <p>For *NIX and win32 platforms, please perform an ANT build:</p>
  <span class="cmd">
  $> cd ical-gateway/<br>
  $> ant build<br>
 </span>
-
+<br><br>
 
 </body>
 </html>
