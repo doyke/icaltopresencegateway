@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>iCal-to-Presence Gateway</title>
+<meta name="author" content="Milind,John,Suhas">
+<meta name="keywords" content="ical,presence">
+<meta name="description" content="Gateway that generates SIP presence events based on iCal calendar information, allowing for automated busy tracking.">
+</head>
+<style type="text/css">
+.reference_indent {
+	margin-left: 30px;
+}
+
+.tag {
+	font-family: courier new, courier, arial;
+	font-size: 12px;
+}
+</style>
+<body bgcolor=white>
+
+<h1>iCal-to-Presence Gateway</h1>
+<address>
+John Morales<br>
+Columbia University<br>
+
+New York, NY 10027<br>
+USA<br>
+<a href="mailto:jm2873@columbia.edu">jm2873@columbia.edu</a>
+</address>
+<p>
+<address>
+Milind Nimesh<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+
+<a href="mailto:mn2353@columbia.edu">mn2353@columbia.edu</a>
+</address>
+<p>
+<address>
+Suhas Suhas<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="mailto:ss3474@columbia.edu">ss3474@columbia.edu</a>
+</address>
+<p>
+
+<h2>Abstract</h2>
+
+<p>This report describes a gateway between an iCalendar calendar server that implements CalDAV and a
+SIP Presence server. Users gain access to the gateway service by registering their calendar account
+with the gateway through a web interface. The gateway then syncs their calendar events with the
+Presence server. Periodic polling of the calendar server provides automated busy tracking
+for those subscribing to user's presence information</p>
+
+<h2>1. Introduction</h2>
+
+<p>In recent years applications are being developed which utilize the user's presence information. A presence server is typically used to distribute the presence information to interested applications. The functionality of such applications is dependent upon the accuracy of the presence information acquired from the presence server. As a result the usefulness of the presence server is directly related to the correctness of the presence information it contains. Hence, it is imperative to keep the presence server updated by providing the latest presence information for each user. For this purpose infrastructure involving location determination technologies such as, GPS, bluetooh, Wifi etc. needs to be deployed to constantly feed the presence server with fresh data.
+
+<p>However, a network element already exists containing the whereabouts of users, namely the calendar server. The calendar server hosts user's calendars which contain valuable scheduling information. In essence, presence information can be derived from a user's calendar and provided as input for the presence server. For example, if a user has marked himself as busy from 4pm to 6pm in the calendar, then this information can be converted into useful presence information and sent to the presence server. Currently no link exists between the calendar server and the presence server. Our gateway tries to establish a link between these two network elements in order to allow automated busy tracking.
+
+<p>This report examines related work in Section 2. Background on the presence and calendaring server is presented in Section 3. The architecture of the gateway along with implementation details is addressed in Section 4. Mapping calendar information to presence messages is described in Section 5. Installation and operation of the gateway are covered in Program documentation found in Section 6, followed by a current task list presented in Section 7.
+
+<h2><a name="related_work">2. Related Work</a></h2>
+
+<p>While there has been much research related to standalone iCalendar and presence servers, to our knowledge there has been no prior implementation of an application to relate the two. This may be due in part to the lack of freely available and robust SIP presence server implementations, which we were fortunately enough to have available to us through Columbia University. In terms of the iCalendar servers, the most mature and open implementation appears to be Apple's Darwin Calendar Server <a href="#3">[3]</a>, while Apple also bundles closed versions of their <a href="#11">[11]</a> in OS X 10.5 (Leopard). </p>
+
+<h2>3. Background</h2>
+<h2>3.1 Presence Server</h2>
+
+<p>A presence server stores presence information of each of its users and sends presence updates to users who subscribe to this presence information. The users whose presence information is stored are known as presentities. A presence server processes Session Initiation Protocol (SIP) Presence messages <a href="#1">[1]</a> on behalf of the presentities. The presentities then send PUBLISH requests to the presence server containing the requisite presence information contained in the Presence Information Data Format (PIDF) <a href="#2">[2]</a>. A subscriber, also known as watcher, interested in receiving the presence updates sends a SUBSCRIBE request to the presence server. The subscriber receives notifications from the presence server via the NOTIFY method when the user's presence state changes. Our implementation utilizes the Java-based presence server developed at Columbia University.
+
+<h2>3.2 Calendar Server</h2>
+
+<p>We principally utilized Apple's Darwin Calendar Server for most of our testing, however we also tested against other calendar services supporting a CalDAV interface such as Google Calendar <a href="#12">[12]</a>. The Darwin Calendar Server is a standards-compliant server that allows multiple users to collaboratively share calendaring information. It provides a shared location on the network to store schedules, and allows users to send each other and manage invitations. The server implements the CalDAV Protocol <a href="#4">[4]</a> which is an extension of WebDAV <a href="#5">[5]</a> which in turn is an extension of HTTP. The CalDAV protocol defines how a client accesses scheduling information on a remote server, which is detailed in RFC 4791 <a href="#6">[6]</a>. The CalDAV protocol uses the iCalendar data standard <a href="#7">[7]</a> for calendar data exchange which is described in RFC 2445 <a href="#8">[8]</a>. Each calendar event consists of a summary (i.e., title), location, description, and optionally a category defining the type of event, as well as a start and end date-time to define when the event takes place. It should be noted that these 6 most common elements found in the Darwin Server are only a subset of those defined in the iCalendar specification, and our gateway implementation only considers these same 6 elements as well.
+
+<h2>4. Architecture</h2>
+
+<img src="images/architecture.gif"></img>
+<br>Figure 1: Architectural diagram
+<br>
+<p>Figure 1 illustrates a high-level view of the various architecture components involved. The gateway is logically in the middle and facilites the synchronization between the calendar server(s) and the presence server. The gateway polls the calendar server on behalf of users registered with the gateway and obtains their schedule information. The gateway then processes the relevant fields of each the user's calendar events and converts it into PIDF format plus some RPID extensions for time data. A presence message is created only with tuples for the user's calendar events currently in progress; events not currently taking place are ignored. This presence message is then published to the presence server, which correspondingly notifies any watchers subscribed to receive updates about a this users's presence information. The gateway issues a new presence message whenever any information about the user's in-progress calendar events changes. This includes adding, editing, or deleting an event currently taking place. Notice that the gateway can be connected to more than one calendar server; each user may specify their own CalDAV-compliant calendar server of choice when registering with the gateway.
+
+<h2>5. Mapping iCalendar events to PIDF Messages</h2>
+
+<img src="images/mapping.png" alt="illustration of mapping calendar fields to a presence message"></img>
+<br>Figure 2: Mapping of calendar information to an example PIDF + RPID message.
+<br><br>
+
+<p>Figure 2 describes how a calendar event is mapped into the Presence Information Data Format (PIDF) elements defined in RFC 3863 <a href="#2">[2]</a>. Rich presence extensions to the PIDF <a href="#9">[9]</a> are also used to convey detailed user activity, and GEOPRIV location object format <a href="#10">[10]</a> is used to describe the event's location information.
+
+<p>A calendar event describes what a person is doing at a particular time. This corresponds to the <span class=tag>&lt;activities&gt;</span> element defined in RPID <a href="#9">[9]</a>. The start and end times of an event can be expressed using the from and until attributes of the <span class=tag>&lt;activities&gt;</span> element. The summary of the event can be mapped into the <span class=tag>&lt;note&gt;</span> child element of <span class=tag>&lt;activities&gt;</span>. The category field of an event roughly corresponds to the activity indications. A list of activity indications is described in RPID which may be used to express the category field. In case the category does not match any of the predefined activity indication elements then the <span class=tag>&lt;other&gt;</span> element is used to specify the category. The description of the event is mapped into the <span class=tag>&lt;note&gt;</span> child element of <span class=tag>&lt;tuple&gt;</span> which is defined in PIDF <a href="#2">[2]</a>. The geographic location of the event is expressed inside the civic address <span class=tag>&lt;LOC&gt;</span> element which is a part of the GEOPRIV location object. Since it is a non-trivial problem to reliably text process the event location into specific GEOPRIV elements, the gateway encapsulates the entire calendar event location inside the <span class=tag>&lt;LOC&gt;</span> element.
+
+<h2>6. Program Documentation</h2>
+
+<p>Please refer to <a href=program-doc.html>program documentation</a> for detailed information about:
+
+<ul>
+<li>System Requirements, (OS, hardware specs, et al.)
+
+<li>Gateway installation and configuration
+<li>Quick-Start guide
+<li>Detailed explanation of the configuration file parameters
+<li>Running the gateway
+<li>Implementation's internal design
+<li>Limitations
+<li>Future work and enhancements
+</ul>
+
+
+<h2>7. Acknowledgements</h2>
+<p>The Presence server we use was developed at Columbia University. The Calendar server is an open source implementation provided by Apple.
+
+<p>We would like to thank Professor Henning Schulzrinne for his guidance and our fellow
+ classmates for their lectures and presentations.</p>
+
+
+<h2><a name="references">8. References</a></h2>
+
+<a class=reference_indent name="1">[1]</a>
+<a href="http://tools.ietf.org/html/rfc3856">RFC 3856</a> A Presence Event Package for the Session Initiation Protocol (SIP)<em></em>,<br/>
+<a class=reference_indent name="2">[2]</a>
+<a href="http://tools.ietf.org/html/rfc3863">RFC 3863</a> Presence Information Data Format (PIDF)<em></em>,<br/>
+<a class=reference_indent name="3">[3]</a>
+<a href="http://trac.calendarserver.org/"> Darwin Calendar Server</a><em></em>,<br/>
+<a class=reference_indent name="4">[4]</a>
+<a href=http://en.wikipedia.org/wiki/CalDAV> Calendaring Extensions to WebDAV (CalDAV)</a><em></em>,<br/>
+<a class=reference_indent name="5">[5]</a>
+<a href=http://en.wikipedia.org/wiki/WebDAV> Web-based Distributed Authoring and Versioning (WebDAV)</a><em></em>,<br/>
+<a class=reference_indent name="6">[6]</a>
+<a href="http://tools.ietf.org/html/rfc4791">RFC 4791</a> Calendaring Extensions to WebDAV (CalDAV)<em></em>,<br/>
+<a class=reference_indent name="7">[7]</a>
+<a href="http://en.wikipedia.org/wiki/ICalendar>iCalendar"> Overview of iCalendar</a> Overview of iCalendar from Wikipedia<em></em>,<br/>
+<a class=reference_indent name="8">[8]</a>
+<a href="http://tools.ietf.org/html/rfc2445">RFC 2445</a> Internet Calendaring and Scheduling Core Object Specification (iCalendar)<em></em>,<br/>
+<a class=reference_indent name="9">[9]</a>
+<a href="http://tools.ietf.org/html/rfc4480">RFC 4480</a> RPID: Rich Presence Extensions to the Presence Information Data Format (PIDF)<em></em>,<br/>
+<a class=reference_indent name="10">[10]</a>
+<a href="http://tools.ietf.org/html/rfc4119">RFC 4119</a> A Presence-based GEOPRIV Location Object Format<em></em>,<br/>
+<a class=reference_indent name="11">[11]</a>
+<a href="http://en.wikipedia.org/wiki/ICal_Server">iCal Server</a> Apple's iCal Server included in OS X Leopard<em></em><br/>
+<a class=reference_indent name="12">[12]</a>
+<a href="http://www.google.com/googlecalendar/overview.html">Google Calendar</a> Overview of Google Calendar and its features<em></em><br/>
+
+<br/>
+</body>
+</html>
