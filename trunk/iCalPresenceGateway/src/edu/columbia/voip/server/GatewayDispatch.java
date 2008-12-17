@@ -3,6 +3,9 @@
  */
 package edu.columbia.voip.server;
 
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -15,6 +18,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.httpclient.HttpException;
+import org.apache.jackrabbit.webdav.DavException;
+
 import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.connector.ObjectStoreException;
 import net.fortuna.ical4j.model.Calendar;
@@ -25,6 +31,7 @@ import net.fortuna.ical4j.model.Property;
 import edu.columbia.voip.ical.NoCalendarEventsException;
 import edu.columbia.voip.presence.Presence;
 import edu.columbia.voip.presence.PresenceCalendar;
+import edu.columbia.voip.presence.SIPException;
 import edu.columbia.voip.user.GatewayUser;
 
 /**
@@ -66,14 +73,22 @@ public class GatewayDispatch implements Runnable
 		catch (NoCalendarEventsException e) { 
 			_logger.log(Level.WARNING, "calendar user '" + _user.getCalendarAccount().getUsername() + "' has no events. We're done here.");
 			return;
-		} 
-		catch (ObjectStoreException e) {
+		} catch (ObjectStoreException e) {
 			_logger.log(Level.SEVERE, "Got ObjectStoreException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
 			throw new RuntimeException(e);
 		} catch (ObjectNotFoundException e) {
 			_logger.log(Level.SEVERE, "Got ObjectNotFoundException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
 			throw new RuntimeException(e);
-		}
+		} catch (HttpException e) {
+			_logger.log(Level.SEVERE, "Got HttpException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			_logger.log(Level.SEVERE, "Got IOException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
+			throw new RuntimeException(e);
+		} catch (DavException e) {
+			_logger.log(Level.SEVERE, "Got DavException from user '" + _user.getCalendarAccount().getUsername() + "'", e);
+			throw new RuntimeException(e);
+		} 
 		
 		// Compare list of calendars to my hashtable of calendar events and
 		// last-modified dates to see if I need to pass the events to presence server
@@ -109,7 +124,8 @@ public class GatewayDispatch implements Runnable
 			// if any events are in my hashtable then those events have now
 			// ended. send a available presence message.
 			_logger.log(Level.INFO, "Sending Available presence message");
-			_presence.sendAvailableMessage(_user.getPrimaryKey());
+			try { _presence.sendAvailableMessage(_user.getPrimaryKey()); }
+			catch (SIPException e) { _logger.log(Level.SEVERE, "got SIP exception when trying to send available message."); }
 			_user.getLastModifiedMap().clear();
 			_user.getPreviousActiveEvents().clear();
 			
@@ -134,6 +150,8 @@ public class GatewayDispatch implements Runnable
 					_logger.log(Level.SEVERE, "caught ObjectNotFoundException while syncing event state", e);
 				} catch (ParseException e) {
 					_logger.log(Level.SEVERE, "caught ParseException while syncing event state", e);
+				} catch (SIPException e) {
+					_logger.log(Level.SEVERE, "caught SIPException message while sending to presence", e);
 				}
 			}
 		}
@@ -285,7 +303,7 @@ public class GatewayDispatch implements Runnable
 		return (now.after(start) && now.before(end)); 
 	}
 
-	private void parseAndSend(List<Calendar> events) throws ObjectNotFoundException, ParseException
+	private void parseAndSend(List<Calendar> events) throws ObjectNotFoundException, ParseException, SIPException
 	{
 		Map<String, Property> propertyMap = new HashMap<String, Property>();
 		Date start = null;
@@ -319,13 +337,13 @@ public class GatewayDispatch implements Runnable
 		}
 		
 		// Send SIP presence message
-		_presence.sendMessage(_user.getPrimaryKey(), presenseCalendars);
+		_presence.sendMessage(_user, presenseCalendars);
 	}
 	
 	private String getPropertyString(Property property, String name)
 	{
-		if (property == null || property.getValue().length() == 0)
-			return "[No " + name + "]";
+		if (property == null)
+			return "";
 		else
 			return property.getValue();
 	}

@@ -18,7 +18,7 @@ public class iCalConnectorTest extends TestCase {
 	/** Non-SSL */
 	private static final String _username = "admin";
 	private static final char[] _password = "admin".toCharArray();
-	public static final String 	HOST = "128.59.18.182";
+	public static final String 	HOST = "128.59.101.33";
 	public static final int 	PORT = 8008;
 	public static final String 	BASE_STORE_PATH = "/calendars/groups/group01/3F8850DB-DDCF-461E-9BED-DCCD45FDE8EF/";
 	

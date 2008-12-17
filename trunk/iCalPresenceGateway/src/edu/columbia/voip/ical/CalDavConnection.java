@@ -1,11 +1,18 @@
 package edu.columbia.voip.ical;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.jackrabbit.webdav.DavException;
+import org.omg.CORBA.Environment;
 
 import edu.columbia.voip.user.CalendarAccount;
 
@@ -31,12 +38,14 @@ public class CalDavConnection implements Serializable
 	}
 	
 	public List<Calendar> getCalendars() 
-			throws NoCalendarEventsException, ObjectStoreException, ObjectNotFoundException
+			throws NoCalendarEventsException, ObjectStoreException, ObjectNotFoundException, 
+					HttpException, IOException, DavException
 	{
 		List<Calendar> calendarList = null;
 		_store.connect(_account.getUsername(), _account.getPassword());
 		
-		List<String> icsFiles = _store.getCalendarUidPaths();
+		List<String> icsFiles = null;
+		icsFiles = _store.getCalendarUidPaths();
 		if (icsFiles == null)
 			throw new NoCalendarEventsException("user " + _account.getUsername() + 
 													" does not have any calendar events");
