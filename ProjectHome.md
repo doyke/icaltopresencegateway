@@ -1,0 +1,3 @@
+Server acts as gateway between iCalendar calendar server (such as Apple's calendar server implementation) and SIP Presence server. Users register their calendar account with the gateway (via Servlet) and the gateway syncs their calendar events with the Presence server. Periodic polling of the calendar server provides automated busy tracking for those subscribing to that Presence user.
+
+The gateway is being implemented in Java leveraging the ical4j, ical4j-connector, jain-sip, and various Apache libraries.
